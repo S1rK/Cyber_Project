@@ -43,7 +43,6 @@ class Peasant(object):
         """
         request_size = int(self.__socket.recv(Commands.SIZE_LENGTH))
         request = self.__socket.recv(request_size)
-        # TODO: DECODE THE REQUEST
         # split the request into a list by spaces
         request_list = request.split(Commands.SEPARATE_CHAR)
         # get the command (as a string)

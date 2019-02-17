@@ -104,7 +104,7 @@ class Master(object):
         if command == 'TAKE_SCREENSHOT':
             print response
         if command == 'SEND_FILE':
-            # TODO: GET THE FILE TYPE (.txt/.png/.jpg/...)
+            # TODO: SPLIT THE RESPONSE TO GET THE FILE'S TYPE AND THE FILE ITSELF
             # save the file on the local machine
             file_name = 'file'+str(self.__file_counter)
             with open(self.__save_dir+file_name, 'wb') as f:
