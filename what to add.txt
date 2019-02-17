@@ -1,0 +1,29 @@
+1. -------------DONE-------------
+select and a counter to the master of how many commands he sent and didn't recieve responses (for a time out)
+when peasent sends response, should send the command he's responsing to
+(when adding select, add to the peasent and the master. in the master accept all peasents when they are trying to connect-later choose to which peasent send which command-add a list of tuples with peasents' sockets and commands.)
+
+
+-------------DONE-------------
+(Just need to implement the getting request in the master, which is the gui's responsibility)
+
+
+-------------DONE-------------
+gui in the master (tkinter easier because of the combo box)-
+with comboBox: select which peasent, which command and params to send. (test#5)
+before calling main loop start a thread that will be responsable for handling new connection, receiving and sending data to the peasents.
+
+----------NEED 2 ADD----------
+2.5
+combine the gui and server classes into the master class:
+create and send to the instances their callbacks functions
+(server.new_connection, server.disconnection,server.recveinig, gui.send_button)
+
+
+3.
+encryption and decryption
+
+
+4.
+command of streaming with new udp socket and threading.
+(opeans a new socket for both master and peasent, open a new pygame window to stream, all this in a thread.)
