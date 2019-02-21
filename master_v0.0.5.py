@@ -55,7 +55,7 @@ class Master(object):
         # set the address to be in the format of tuple: (str(ip), int(port))
         address = (address[0], int(address[2]))
         # get the command
-        command = comboboxes['command'].get()
+        command = Commands.command_number(comboboxes['command'].get())
         # get the params
         params = [e.get() for l, e in entries]
         # if debug is on then print them all
@@ -63,9 +63,9 @@ class Master(object):
             print "sending to <%s : %s> the command %s with those params: %s" % \
                   (address[0], str(address[1]), command, params)
         # get the command's number
-        command_number = Commands.get_commands_names().index(command)
-        # the data to send to the peasant
-        data = Commands.SEPARATE_CHAR.join([str(command_number)] + params)
+        command_number = Commands.command_number(command)
+        # combine all the arguments to one message to send to the peasant
+        data = command_number + Commands.SEPARATE_CHAR.join(params)
         # send the request throw the server
         self.__server.send(address=address, data=data)
 

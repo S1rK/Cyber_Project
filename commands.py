@@ -9,6 +9,8 @@ from PIL import ImageGrab
 class Commands(object):
     # the number of digits the length of the messages sending
     SIZE_LENGTH = 10
+    # the number of digits the length of a command
+    COMMAND_LENGTH = 1
     # the special character that separates params' elements and command number
     SEPARATE_CHAR = '|'
     # the number of images taken
@@ -18,12 +20,14 @@ class Commands(object):
     def pad_length(length):
         """
         :param length: the request's length we want to send to the client
-        :return: returns the length, in string, padded with 0 at the start
+        :return: returns the length, in string, padded with 0 at the start (if needed)
         """
         length = str(length)
         while len(length) < Commands.SIZE_LENGTH:
             length = "0" + length
         return length
+
+    """-----------------THE COMMANDS-----------------"""
 
     @staticmethod
     def __commands():
@@ -31,16 +35,21 @@ class Commands(object):
         The commands in the format of - command's name : (command's function, command's parameters)
         :return:
         """
-        return {'TAKE_SCREENSHOT': (Commands.take_screenshot_command, []),
-                'SEND_FILE': (Commands.send_file_command, ['File Name']),
-                'DIR': (Commands.dir_command, []),
-                'DELETE': (Commands.delete_command, ['File Name']),
-                'COPY': (Commands.copy_command, ['Source', 'Destination']),
-                'EXECUTE': (Commands.execute_command, ['Executable File']),
-                'EXIT': (Commands.exit_command, [])}
+        return {'TAKE_SCREENSHOT': (Commands.__take_screenshot_command, []),
+                'SEND_FILE': (Commands.__send_file_command, ['File Name']),
+                'DIR': (Commands.__dir_command, []),
+                'DELETE': (Commands.__delete_command, ['File Name']),
+                'COPY': (Commands.__copy_command, ['Source', 'Destination']),
+                'EXECUTE': (Commands.__execute_command, ['Executable File']),
+                'EXIT': (Commands.__exit_command, [])}
+
+# TODO: change all commands to receive socket (and maybe the length of the parameters)
+    # to receive their parameters thought the socket
 
     @staticmethod
-    def take_screenshot_command(picture_name=""):
+    def __take_screenshot_command(socket):
+        # get the picture name
+        picture_name = ""
         # take a screen shot
         im = ImageGrab.grab()
         # if there is no given name to the image
@@ -55,27 +64,27 @@ class Commands(object):
         return "saved at " + str(picture_name)
 
     @staticmethod
-    def copy_command(src, dest):
+    def __copy_command(src, dest):
         copy(src, dest)
         return 'copied %s to %s' % (str(src), str(dest))
 
     @staticmethod
-    def execute_command(to_execute):
+    def __execute_command(to_execute):
         subprocess.call(to_execute)
         return 'Executed %s' % str(to_execute)
 
     @staticmethod
-    def delete_command(to_delete):
+    def __delete_command(to_delete):
         os.remove(to_delete)
         return 'Deleted %s' % str(to_delete)
 
     @staticmethod
-    def dir_command(directory):
+    def __dir_command(directory):
         files_list = os.listdir(directory)
         return files_list
 
     @staticmethod
-    def send_file_command(file_name):
+    def __send_file_command(file_name):
         # get the file's data as binary data
         with open(file_name, "rb") as f:
             data = f.read()
@@ -85,24 +94,21 @@ class Commands(object):
         return typ + Commands.SEPARATE_CHAR + data
 
     @staticmethod
-    def exit_command():
+    def __exit_command():
         return 'Bye bye'
 
-    @staticmethod
-    def get_commands():
-        """
-        :return: a dictionary between command's name and their functions
-        """
-        return {k: v[0] for k, v in Commands.__commands()}
+    """-----------------COMMANDS RELATED PUBLIC FUNCTIONS-----------------"""
 
     @staticmethod
-    def get_commands_parameters(command):
+    def command_number(command):
         """
-        Returns the command's parameters
-        :param command: the command
-        :return: the given command's parameters
+        :param command: the command's name
+        :return: the command's number as a string, padded with 0 at the start (if needed)
         """
-        return Commands.__commands()[command][1]
+        command_num = str(Commands.__commands().keys().index(command))
+        while len(command_num) < Commands.COMMAND_LENGTH:
+            command_num = '0' + command_num
+        return command_num
 
     @staticmethod
     def get_commands_names():
@@ -110,3 +116,21 @@ class Commands(object):
         :return: the commands' names
         """
         return Commands.__commands().keys()
+
+    @staticmethod
+    def handle_command(command_number, *args):
+        """
+        :param command_number: the command's number
+        :param args: a list of arguments to the command's handler
+        :return: the command's return value
+        """
+        return Commands.__commands()[Commands.__commands().keys()[command_number]][0](*args)
+
+    @staticmethod
+    def get_commands_parameters(command_number):
+        """
+        Returns the command's parameters
+        :param command_number: the command's number
+        :return: the given command's parameters
+        """
+        return Commands.__commands()[Commands.__commands().keys()[command_number]][1]

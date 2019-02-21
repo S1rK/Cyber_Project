@@ -69,10 +69,6 @@ class Server(object):
             if sock in wlist:
                 # send to the socket the request
                 self.__send_to_socket(sock, data)
-                # if the data sent wasn't 'EXIT' (meaning we didn't disconnected the socket - waiting fro a respond)
-                if data != 'EXIT':
-                    # increase the counter
-                    self.__counter += 1
                 # remove the request from the requests list
                 if element in self.__to_send:
                     self.__to_send.remove(element)
@@ -123,6 +119,8 @@ class Server(object):
         :param s: the socket to get the data from
         :return: the data got from the socket
         """
+        # decrease the counter
+        self.__counter -= 1
         # get the socket address
         address = self.__get_address_by_socket(s)
         # get the data's length
@@ -142,8 +140,6 @@ class Server(object):
         # get the data itself
         data = s.recv(length)
         # TODO: DECRYPT
-        # decrease the counter
-        self.__counter -= 1
         # if DEBUG MODE on then print the data we got
         if self.__DEBUG:
             print "Got the following response from <%s : %s>:\n%s" % (address[0], address[1], data)
