@@ -1,12 +1,31 @@
-# Tal's Peasant Class
+# Tal's Commands Class
+# Version 6 - 14.2.19
 
 import os
 import subprocess
 from shutil import copy
 from PIL import ImageGrab
+import win32com.client as cl
 
 
 class Commands(object):
+    """-----------------THE COMMAND DICTIONARY-----------------"""
+    @staticmethod
+    def __commands():
+        """
+        The commands in the format of - command's name : (command's function, command's parameters)
+        :return:
+        """
+        return {'Take Screen Shot': (Commands.__take_screenshot_command, []),
+                'Download File': (Commands.__send_file_command, ['File Name']),
+                'Dir': (Commands.__dir_command, []),
+                'Delete File': (Commands.__delete_command, ['File Name']),
+                'Copy File': (Commands.__copy_command, ['Source', 'Destination']),
+                'Execute': (Commands.__execute_command, ['Executable File']),
+                'Text To Speech': (Commands.text_to_speech, ['The Text To Say']),
+                'Disconnect': (Commands.__disconnect_command, [])}
+
+    """-----------------THE CONSTS-----------------"""
     # the number of digits the length of the messages sending
     SIZE_LENGTH = 10
     # the number of digits the length of a command
@@ -16,35 +35,7 @@ class Commands(object):
     # the number of images taken
     __image_number = 0
 
-    @staticmethod
-    def pad_length(length):
-        """
-        :param length: the request's length we want to send to the client
-        :return: returns the length, in string, padded with 0 at the start (if needed)
-        """
-        length = str(length)
-        while len(length) < Commands.SIZE_LENGTH:
-            length = "0" + length
-        return length
-
-    """-----------------THE COMMANDS-----------------"""
-
-    @staticmethod
-    def __commands():
-        """
-        The commands in the format of - command's name : (command's function, command's parameters)
-        :return:
-        """
-        return {'TAKE_SCREENSHOT': (Commands.__take_screenshot_command, []),
-                'SEND_FILE': (Commands.__send_file_command, ['File Name']),
-                'DIR': (Commands.__dir_command, []),
-                'DELETE': (Commands.__delete_command, ['File Name']),
-                'COPY': (Commands.__copy_command, ['Source', 'Destination']),
-                'EXECUTE': (Commands.__execute_command, ['Executable File']),
-                'EXIT': (Commands.__exit_command, [])}
-
-# TODO: change all commands to receive socket (and maybe the length of the parameters)
-    # to receive their parameters thought the socket
+    """-----------------COMMANDS REQUESTS HANDLERS-----------------"""
 
     @staticmethod
     def __take_screenshot_command(socket):
@@ -94,7 +85,12 @@ class Commands(object):
         return typ + Commands.SEPARATE_CHAR + data
 
     @staticmethod
-    def __exit_command():
+    def text_to_speech(text):
+        sp = cl.Dispatch("SAPI.SpVoice")
+        sp.Speak(text)
+
+    @staticmethod
+    def __disconnect_command():
         return 'Bye bye'
 
     """-----------------COMMANDS RELATED PUBLIC FUNCTIONS-----------------"""
@@ -115,10 +111,10 @@ class Commands(object):
         """
         :return: the commands' names
         """
-        return Commands.__commands().keys()
+        return tuple(Commands.__commands().keys())
 
     @staticmethod
-    def handle_command(command_number, *args):
+    def handle_command_request(command_number, *args):
         """
         :param command_number: the command's number
         :param args: a list of arguments to the command's handler
@@ -127,10 +123,23 @@ class Commands(object):
         return Commands.__commands()[Commands.__commands().keys()[command_number]][0](*args)
 
     @staticmethod
-    def get_commands_parameters(command_number):
+    def get_commands_parameters(command_name):
         """
         Returns the command's parameters
-        :param command_number: the command's number
+        :param command_name: the command's name
         :return: the given command's parameters
         """
-        return Commands.__commands()[Commands.__commands().keys()[command_number]][1]
+        return Commands.__commands()[command_name][1]
+
+    """-----------------HELPER PUBLIC FUNCTIONS-----------------"""
+
+    @staticmethod
+    def pad_length(length):
+        """
+        :param length: the request's length we want to send to the client
+        :return: returns the length, in string, padded with 0 at the start (if needed)
+        """
+        length = str(length)
+        while len(length) < Commands.SIZE_LENGTH:
+            length = "0" + length
+        return length

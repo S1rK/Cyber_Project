@@ -3,6 +3,7 @@ Tal's Mater Class
 Version 5 - 14.2.19
 """
 
+import Tkinter as tk
 
 def func1(a, b):
     print a + b
@@ -10,7 +11,6 @@ def func1(a, b):
 
 def warpper(func, *args):
     func(*args)
-
 
 if __name__ == '__main__':
     """
@@ -22,5 +22,7 @@ if __name__ == '__main__':
     print len(data)
     print len(str(len(data)))
     print pic[pic.rfind('.')+1:]
+    
+    -----------------------------------
     """
     warpper(func1, 'hi ', 'there')

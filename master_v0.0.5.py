@@ -47,15 +47,26 @@ class Master(object):
         """
         print('------------SEND CALLBACK------------')
         # get the address to send the request
-        address = comboboxes['peasant'].get().split(" ")
-        # if there was no address chosen
+        address = comboboxes['peasant'].get()
+
+        # check if there is an empty address
         if not address:
+            # print an error to the gui
+            self.__gui.print_output("ERROR: Empty Address.")
             # exit the function - there is no where to send the request
             return
+
+        address = address.split(" ")
+
+        command = comboboxes['command'].get()
+        # check if there is an empty command
+        if not command:
+            self.__gui.print_output("ERROR: Empty Command.")
+
         # set the address to be in the format of tuple: (str(ip), int(port))
         address = (address[0], int(address[2]))
         # get the command
-        command = Commands.command_number(comboboxes['command'].get())
+        command = Commands.command_number(command)
         # get the params
         params = [e.get() for l, e in entries]
         # if debug is on then print them all

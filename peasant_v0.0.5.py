@@ -1,7 +1,6 @@
 # Tal's Peasant Class
-# Version 5 - 14.2.19
+# Version 6 - 14.2.19
 
-import os
 import socket
 from select import select
 from threading import Thread
@@ -20,8 +19,6 @@ class Peasant(object):
         """
         # open a TCP\IP socket
         self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # get the commands from the commands
-        self.__commands = Commands.get_commands()
         # the masters' ip
         self.__IP = ip
         # the masters' port
@@ -45,7 +42,7 @@ class Peasant(object):
         # get the request's command's number
         command = int(self.__socket.recv(Commands.COMMAND_LENGTH))
         # handle the command and add the return value to the responses list
-        self.__responses.append(Commands.handle_command(command, self.__socket, request_size))
+        self.__responses.append(Commands.handle_command_request(command, self.__socket, request_size))
 
     def __send_responses(self):
         """
