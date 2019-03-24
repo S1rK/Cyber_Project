@@ -19,7 +19,6 @@ class HighlightText(tk.Text):
         If 'regexp' is set to True, pattern will be treated as a regular
         expression according to Tcl's regular expression syntax.
         """
-
         start = self.index(start)
         end = self.index(end)
         self.mark_set("matchStart", start)
@@ -107,8 +106,11 @@ class GUI(object):
         output = HighlightText(self.__root, state=tk.DISABLED, font=FONT)
         output.config(state=tk.DISABLED, font=FONT)
         output.grid(row=11, column=0, columnspan=2)
+        # add the red highlight tag
         output.tag_configure("red", foreground="red")
-        output.highlight_pattern("ERROR", "red")
+        # add the red highlight tag
+        output.tag_configure("blue", foreground="blue")
+        # set the member output to be the output we just used
         self.__output = output
 
         # bind the command combo-box and the send button to their respective callback functions
@@ -155,7 +157,7 @@ class GUI(object):
         for entry in Commands.get_commands_parameters(command):
             # create label and entry
             l = tk.Label(root, text=str(entry) + ":", font=FONT)
-            e = tk.Entry(root)
+            e = tk.Entry(root, font=FONT)
             l.grid(row=row, column=0)
             e.grid(row=row, column=1)
             row += 1
@@ -217,6 +219,10 @@ class GUI(object):
         """
         self.__output.config(state=tk.NORMAL)
         self.__output.insert(tk.END, text+'\n')
+        # add the red tag to all the ERROR msgs
+        self.__output.highlight_pattern("ERROR", "red")
+        # add the blue tag to all the DEBUG msgs
+        self.__output.highlight_pattern("DEBUG", "blue")
         self.__output.config(state=tk.DISABLED)
 
     def run(self):
@@ -229,13 +235,13 @@ class GUI(object):
 
 if __name__ == '__main__':
     # create a new master
-    print Commands.get_commands_names()
     gui = GUI()
     gui.add_connection("127.0.0.1 : 80")
     gui.add_connection("127.0.0.1 : 5400")
     gui.add_connection("127.0.0.1 : 1000")
     gui.print_output("hi there")
     gui.print_output("my name is tal")
-    gui.print_output("ERROR: FUCK YOU")
+    gui.print_output("ERROR: This is an error msg")
+    gui.print_output("DEBUG: This is a debug msg")
     # run the gui
     gui.run()

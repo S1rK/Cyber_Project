@@ -71,8 +71,7 @@ class Master(object):
         params = [e.get() for l, e in entries]
         # if debug is on then print them all
         if self.__DEBUG:
-            print "sending to <%s : %s> the command %s with those params: %s" % \
-                  (address[0], str(address[1]), command, params)
+            self.__gui.print_output("DEBUG: sending to <%s : %s> the command %s with those params: %s" % (address[0], str(address[1]), command, params))
         # get the command's number
         command_number = Commands.command_number(command)
         # combine all the arguments to one message to send to the peasant
@@ -89,7 +88,7 @@ class Master(object):
         """
         # if the debug mode is on, print the received data
         if self.__DEBUG:
-            print "received form <%s : %s> the following data: %s" % (address[0], address[1], data)
+            self.__gui.print_output("DEBUG: received form <%s : %s> the following data: %s" % (address[0], address[1], data))
         # separate the data to command number, params and response
         data = data.split(Commands.SEPARATE_CHAR)
         # get the response
