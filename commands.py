@@ -98,6 +98,10 @@ class Commands(object):
     def __disconnect_request():
         return 'Bye bye'
 
+    @staticmethod
+    def __print_response(response):
+        print response
+
     """-----------------COMMANDS RELATED PUBLIC FUNCTIONS-----------------"""
 
     @staticmethod

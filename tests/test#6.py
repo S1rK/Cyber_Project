@@ -3,14 +3,14 @@ Tal's Mater Class
 Version 5 - 14.2.19
 """
 
-import Tkinter as tk
 
 def func1(a, b):
     print a + b
 
 
-def warpper(func, *args):
+def warapper(func, *args):
     func(*args)
+
 
 if __name__ == '__main__':
     """
@@ -24,5 +24,10 @@ if __name__ == '__main__':
     print pic[pic.rfind('.')+1:]
     
     -----------------------------------
+    import win32com.client as cl
+    
+    sp = cl.Dispatch("SAPI.SpVoice")
+    sp.Speak("ELIRAN. STOP PLAYING CHESS")
     """
-    warpper(func1, 'hi ', 'there')
+
+    warapper(func1, 'hi ', 'there')
