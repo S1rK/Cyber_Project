@@ -92,11 +92,11 @@ class Master(object):
         # separate the data to command number, params and response
         data = data.split(Commands.SEPARATE_CHAR)
         # get the response
-        response = data[-1]
+        command = data[0:Commands.COMMAND_LENGTH]
         # get the request
-        request = data[:-1]
+        response = data[Commands.COMMAND_LENGTH:]
         # call the handle response
-        self.__handle_response(response=response, request=request)
+        self.__gui.print_output(Commands.handle_command_response(command)(response))
 
     def __handle_response(self, response, request):
         """

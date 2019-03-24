@@ -142,7 +142,7 @@ class Server(object):
         # TODO: DECRYPT
         # if DEBUG MODE on then print the data we got
         if self.__DEBUG:
-            print "Got the following response from <%s : %s>:\n%s" % (address[0], address[1], data)
+            print "Got the following response from <%s : %s>:\n%s" % (address[0], str(address[1]), data)
         # return the data we got
         return data
 
