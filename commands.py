@@ -16,12 +16,12 @@ class Commands(object):
         The commands in the format of - command's name : (command's function, command's parameters)
         :return:
         """
-        return {'Take Screen Shot': (Commands.__take_screenshot_request, Commands.__print_reponse, []),
+        return {'Take Screen Shot': (Commands.__take_screenshot_request, Commands.__print_response, []),
                 'Download File': (Commands.__send_file_request, Commands.__send_file_reponse, ['File Name']),
-                'Dir': (Commands.__dir_request, Commands.__print_reponse, []),
+                'Dir': (Commands.__dir_request, Commands.__print_response, []),
                 'Delete File': (Commands.__delete_request, Commands.__print_response, ['File Name']),
                 'Copy File': (Commands.__copy_request, Commands.__print_response, ['Source', 'Destination']),
-                'Execute': (Commands.__execute_request, Commands.__print_reponse, ['Executable File']),
+                'Execute': (Commands.__execute_request, Commands.__print_response, ['Executable File']),
                 'Text To Speech': (Commands.__text_to_speech_request, Commands.__print_response, ['The Text To Say']),
                 'Disconnect': (Commands.__disconnect_request, Commands.__print_response, [])}
 
