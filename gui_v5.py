@@ -46,8 +46,6 @@ class GUI(object):
         :param send_callback: the function to call if the user press the send button
         :param debug: debug mode (True-on, False-off)
         """
-        # if the gui is still running
-        self.__running = False
         # the function to call when pressing the button
         self.__send_callback = send_callback if send_callback is not None else self.__default_send_callback
         # the function to call when changing the command combo box
@@ -197,24 +195,22 @@ class GUI(object):
         :param address: the new peasant's address
         :return: nothing, void
         """
-        # if the gui is still running
-        if self.__running:
-            # save the combo-box in a variable
-            cb = self.__comboboxes['peasant']
-            # if the combo-box's values is empty
-            if not cb['values']:
-                # add a dummy into the values
-                cb['values'] += '$'
-                # add the address
-                cb['values'] += (str(address),)
-                # remove the dummy by setting the values to a tuple with only the address
-                cb['values'] = (str(address),)
-            # the combo-box's values isn't empty
-            else:
-                # add to the values a tuple with only the address
-                cb['values'] += (str(address),)
-            # print to the output that a new connection has been established
-            print "A New Connection From Address: <%s>" % str(address)
+        # save the combo-box in a variable
+        cb = self.__comboboxes['peasant']
+        # if the combo-box's values is empty
+        if not cb['values']:
+            # add a dummy into the values
+            cb['values'] += '$'
+            # add the address
+            cb['values'] += (str(address),)
+            # remove the dummy by setting the values to a tuple with only the address
+            cb['values'] = (str(address),)
+        # the combo-box's values isn't empty
+        else:
+            # add to the values a tuple with only the address
+            cb['values'] += (str(address),)
+        # print to the output that a new connection has been established
+        print "A New Connection From Address: <%s>" % str(address)
 
     def remove_connection(self, address):
         """
@@ -222,17 +218,15 @@ class GUI(object):
         :param address: the existing peasant's address
         :return: nothing, void
         """
-        # if the gui is still running
-        if self.__running:
-            # save the combo-box in a variable
-            cb = self.__comboboxes['peasant']['values']
-            # if the address is in the combo-box's values
-            if str(address) in cb:
-                cb = list(cb)
-                cb.remove(str(address))
-                self.__comboboxes['peasant']['values'] = tuple(cb)
-            # print to the output that an existing connection has been disconnected
-            print "<%s> has disconnected." % str(address)
+        # save the combo-box in a variable
+        cb = self.__comboboxes['peasant']['values']
+        # if the address is in the combo-box's values
+        if str(address) in cb:
+            cb = list(cb)
+            cb.remove(str(address))
+            self.__comboboxes['peasant']['values'] = tuple(cb)
+        # print to the output that an existing connection has been disconnected
+        print "<%s> has disconnected." % str(address)
 
     def write(self, text):
         """
@@ -240,34 +234,37 @@ class GUI(object):
         :param text: the text to print to the gui
         :return: nothing, void
         """
-        # if the gui is still running
-        if self.__running:
-            self.__output.config(state=tk.NORMAL)
-            self.__output.insert(tk.END, text)
-            # add the red tag to all the ERROR msgs
-            self.__output.highlight_pattern("ERROR", "red")
-            # add the blue tag to all the DEBUG msgs
-            self.__output.highlight_pattern("DEBUG", "blue")
-            self.__output.config(state=tk.DISABLED)
+        self.__output.config(state=tk.NORMAL)
+        self.__output.insert(tk.END, text)
+        # add the red tag to all the ERROR msgs
+        self.__output.highlight_pattern("ERROR", "red")
+        # add the blue tag to all the DEBUG msgs
+        self.__output.highlight_pattern("DEBUG", "blue")
+        self.__output.config(state=tk.DISABLED)
 
     def run(self):
         """
         Runs the gui - the window (with Tkinter.Tk.mainloop())
         :return: nothing, void
         """
-        self.__running = True
+        # set the stdout to be the gui
+        sys.stdout = self
+
+        # run the tkinter main loop
         self.__root.mainloop()
-        self.__running = False
+
+        # return the normal stdout
+        sys.stdout = sys.__stdout__
 
 
 if __name__ == '__main__':
-    previous_out = sys.stdout
     # create a new gui
     gui = GUI()
+
     # set the stdout to be the gui
     sys.stdout = gui
-    # check the add connection and write (print) functions
 
+    # check the add connection and write (print) functions
     gui.add_connection("186.125.134.34 : 7854")
     gui.add_connection("54.86.11.99 : 5114")
     gui.add_connection("155.118.92.70 : 4521")
@@ -278,6 +275,3 @@ if __name__ == '__main__':
 
     # run the gui
     gui.run()
-
-    # return the normal stdout
-    sys.stdout = previous_out

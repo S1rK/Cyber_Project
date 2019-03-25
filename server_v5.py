@@ -215,7 +215,7 @@ class Server(object):
         """
         :return: if the server is open
         """
-        return not self.__closed and self.__socket is None
+        return not self.__closed
 
     def close(self):
         """

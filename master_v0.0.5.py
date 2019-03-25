@@ -130,10 +130,9 @@ class Master(object):
         print (Commands.handle_command_response(command)(response))
 
     def run(self):
-        # save the default stdout
-        previous_out = sys.stdout
         # set the stdout to be the gui
         sys.stdout = self.__gui
+
         print >> sys.__stdout__, "changed stdout"
         server_thread = Thread(target=self.__server.open)
         print >> sys.__stdout__, "created server thread"
@@ -154,8 +153,8 @@ class Master(object):
         server_thread.join()
         print >> sys.__stdout__, "server thread stopped"
 
-        # return the stdout to be the default
-        sys.stdout = previous_out
+        # return the normal stdout
+        sys.stdout = sys.__stdout__
 
 
 if __name__ == '__main__':
