@@ -5,6 +5,7 @@ from threading import Thread
 from commands import Commands
 from server_v5 import Server
 from gui_v5 import GUI
+import sys
 
 
 class Master(object):
@@ -15,8 +16,9 @@ class Master(object):
         :param debug: debug mode (True-on, False-off)
         """
         # create a server
-        self.__server = Server(ip=ip, port=port, connection_callback=self.__handle_new_connection
-                               , receiving_callback=self.__handle_receiving, debug=debug)
+        self.__server = Server(ip=ip, port=port, connection_callback=self.__handle_new_connection,
+                               receiving_callback=self.__handle_receiving,
+                               disconnect_callback=self.__handle_disconnection, debug=debug)
         # create a gui
         self.__gui = GUI(send_callback=self.__handle_sending, debug=debug)
         # the directory to save all received files
@@ -32,10 +34,21 @@ class Master(object):
         :param address: the address of the new client
         :return: nothing, void
         """
-        # se the address to be in the format - ip : port
+        # set the address to be in the format - ip : port
         address = "%s : %s" % (address[0], str(address[1]))
         # add the new address to the gui
         self.__gui.add_connection(address=address)
+
+    def __handle_disconnection(self, address):
+        """
+        Receives from the server an existing address that has been disconnected and removing it from the gui.
+        :param address: the address of the disconnected client
+        :return: nothing, void
+        """
+        # set the address to be in the format - ip : port
+        address = "%s : %s" % (address[0], str(address[1]))
+        # add the new address to the gui
+        self.__gui.remove_connection(address=address)
 
     def __handle_sending(self, event=None, comboboxes={}, entries=[]):
         """
@@ -45,14 +58,15 @@ class Master(object):
         :param entries: all the entries
         :return:
         """
-        print('------------SEND CALLBACK------------')
+        if self.__DEBUG:
+            print '------------SEND CALLBACK------------'
         # get the address to send the request
         address = comboboxes['peasant'].get()
 
         # check if there is an empty address
         if not address:
             # print an error to the gui
-            self.__gui.print_output("ERROR: Empty Address.")
+            print "ERROR: Empty Address."
             # exit the function - there is no where to send the request
             return
 
@@ -61,7 +75,7 @@ class Master(object):
         command = comboboxes['command'].get()
         # check if there is an empty command
         if not command:
-            self.__gui.print_output("ERROR: Empty Command.")
+            print "ERROR: Empty Command."
 
         # set the address to be in the format of tuple: (str(ip), int(port))
         address = (address[0], int(address[2]))
@@ -71,7 +85,7 @@ class Master(object):
         params = [e.get() for l, e in entries]
         # if debug is on then print them all
         if self.__DEBUG:
-            self.__gui.print_output("DEBUG: sending to <%s : %s> the command %s with those params: %s" % (address[0], str(address[1]), command, params))
+            print "DEBUG: sending to <%s : %s> the command %s with those params: %s" % (address[0], str(address[1]), command, params)
         # get the command's number
         command_number = Commands.command_number(command)
         # combine all the arguments to one message to send to the peasant
@@ -88,7 +102,7 @@ class Master(object):
         """
         # if the debug mode is on, print the received data
         if self.__DEBUG:
-            self.__gui.print_output("DEBUG: received form <%s : %s> the following data: %s" % (address[0], address[1], data))
+            print "DEBUG: received form <%s : %s> the following data: %s" % (address[0], address[1], data)
         # separate the data to command number, params and response
         data = data.split(Commands.SEPARATE_CHAR)
         # get the response
@@ -96,53 +110,52 @@ class Master(object):
         # get the request
         response = data[Commands.COMMAND_LENGTH:]
         # call the handle response
-        self.__gui.print_output(Commands.handle_command_response(command)(response))
+        self.__gui.write(Commands.handle_command_response(command)(response))
 
-    def __handle_response(self, response, request):
+    def __handle_response(self, address, response):
         """
         Handles the response from the peasant according to the request
+        :param address: the address of the peasant
         :param response: the peasant's response
-        :param request: the request we sent to the peasant
         :return: nothing, void
         """
         # TODO: FINISH THIS SHIT BY PROTOCOL (CLIENT SENDING: COMMAND NUMBER(0-9)|RESPONSE)
-        # get the command and the
-        request_list = request.split(" ")
-        command = request_list[0]
-        params = request_list[1:]
+        # get the command
+        command = response[0:Commands.COMMAND_LENGTH]
+        # get the response itself
+        response = response[Commands.COMMAND_LENGTH:]
 
-        if command == 'TAKE_SCREENSHOT':
-            print response
-        if command == 'SEND_FILE':
-            # TODO: SPLIT THE RESPONSE TO GET THE FILE'S TYPE AND THE FILE ITSELF
-            # save the file on the local machine
-            file_name = 'file'+str(self.__file_counter)
-            with open(self.__save_dir+file_name, 'wb') as f:
-                f.write(response)
-            # increase the number of files
-            self.__file_counter += 1
-        if command == 'DIR':
-            print response
-        if command == 'DELETE':
-            print response
-        if command == 'COPY':
-            print response
-        if command == 'EXECUTE':
-            print response
+        # call the response handler for this command and send if the response and the sender's address
+        # and print it's return value
+        print (Commands.handle_command_response(command)(response))
 
     def run(self):
-        # open the server
+        # save the default stdout
+        previous_out = sys.stdout
+        # set the stdout to be the gui
+        sys.stdout = self.__gui
+        print >> sys.__stdout__, "changed stdout"
         server_thread = Thread(target=self.__server.open)
-        # run the gui
-        gui_thread = Thread(target=self.__gui.run)
+        print >> sys.__stdout__, "created server thread"
 
-        # wait for the gui to finish
-        gui_thread.join()
+        # open the server
+        server_thread.start()
+        print >> sys.__stdout__, "started server thread"
+
+        # run the gui and wait for him to stop
+        print >> sys.__stdout__, "starting gui"
+        self.__gui.run()
+        print >> sys.__stdout__, "gui finished"
 
         # close the server
         self.__server.close()
         # wait for the server to finish (close)
+        print >> sys.__stdout__, "waiting for server thread to stop"
         server_thread.join()
+        print >> sys.__stdout__, "server thread stopped"
+
+        # return the stdout to be the default
+        sys.stdout = previous_out
 
 
 if __name__ == '__main__':

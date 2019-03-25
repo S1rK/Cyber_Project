@@ -17,7 +17,7 @@ class Commands(object):
         :return:
         """
         return {'Take Screen Shot': (Commands.__take_screenshot_request, Commands.__print_response, []),
-                'Download File': (Commands.__send_file_request, Commands.__send_file_reponse, ['File Name']),
+                'Download File': (Commands.__send_file_request, Commands.__send_file_response, ['File Name']),
                 'Dir': (Commands.__dir_request, Commands.__print_response, []),
                 'Delete File': (Commands.__delete_request, Commands.__print_response, ['File Name']),
                 'Copy File': (Commands.__copy_request, Commands.__print_response, ['Source', 'Destination']),
@@ -35,9 +35,9 @@ class Commands(object):
     # the number of images taken
     __image_number = 0
     # indexes in the dictionary
-    __REQUEST_INDEX = 1
+    __REQUEST_INDEX = 0
     __RESPONSE_INDEX = 1
-    __PARAM_INDEX = 1
+    __PARAM_INDEX = 2
 
     """-----------------COMMANDS REQUESTS HANDLERS-----------------"""
 
@@ -102,6 +102,10 @@ class Commands(object):
     def __print_response(response):
         print response
 
+    @staticmethod
+    def __send_file_response(response):
+        print response
+
     """-----------------COMMANDS RELATED PUBLIC FUNCTIONS-----------------"""
 
     @staticmethod
@@ -120,7 +124,7 @@ class Commands(object):
         """
         :return: the commands' names
         """
-        return tuple(Commands.__commands().keys())
+        return Commands.__commands().keys()
 
     @staticmethod
     def handle_command_request(command_number, *args):

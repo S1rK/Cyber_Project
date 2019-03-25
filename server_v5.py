@@ -11,24 +11,26 @@ class Server(object):
     def __default_connection_callback(self, address):
         if self.__DEBUG:
             print('--------DEFAULT CONNECTION CALLBACK--------')
-        else:
-            print('------------CONNECTION CALLBACK------------')
         print "new connection from: <%s : %d>" % (address[0], address[1])
 
     def __default_receiving_callback(self, address, data):
         if self.__DEBUG:
             print('--------DEFAULT RECEIVING CALLBACK--------')
-        else:
-            print('------------RECEIVING CALLBACK------------')
         print "received from client: <%s : %s>" % (address[0], address[1])
         print "data: %s" % data
 
-    def __init__(self, ip='0.0.0.0', port=8220, connection_callback=None, receiving_callback=None, debug=False):
+    def __default_disconnect_callback(self, address):
+        if self.__DEBUG:
+            print
+        print "<%s : %s> has disconnected" % (address[0], address[1])
+
+    def __init__(self, ip='0.0.0.0', port=8220, connection_callback=None, receiving_callback=None, disconnect_callback=None, debug=False):
         """
         :param ip: the ip of the master
         :param port: the port of the master socket
         :param connection_callback: a callback function to call when there is a new connection
         :param receiving_callback: a callback function to call when there is a new received data
+        :param disconnect_callback: a callback function to call when a client has been disconnected
         :param debug: debug mode (True-on, False-off)
         """
         # open a TCP\IP socket, and bind it to the given ip and port
@@ -46,6 +48,8 @@ class Server(object):
         # a function to call when receiving new data
         self.__receiving_callback = self.__default_receiving_callback if receiving_callback is None \
             else receiving_callback
+        self.__disconnect_callback = self.__default_disconnect_callback if disconnect_callback is None \
+            else disconnect_callback
         # a counter of how many requests sent and how many responses received
         self.__counter = 0
         # debug mode
@@ -89,8 +93,12 @@ class Server(object):
                 address = self.__get_address_by_socket(s)
                 # get the response from the socket
                 response = self.__recv_from_socket(s)
-                # send to the receiving callback function the address of the sending client and the response he sent
-                self.__receiving_callback(address, response)
+                # if the client disconnected
+                if response == 'EXIT':
+                    self.__disconnect_callback(address)
+                else:
+                    # send to the receiving callback function the address of the sending client and the response he sent
+                    self.__receiving_callback(address, response)
 
     def __send_to_socket(self, sock, data):
         """
@@ -157,6 +165,8 @@ class Server(object):
         Opens the socket, receiving clients and handling them, until the server is closed.
         :return: nothing, void
         """
+        import sys
+        print >> sys.__stdout__, "YES?"
         # open the socket to listen up to 5 connections
         self.__socket.listen(5)
         # a counter to print while's parameters
@@ -184,6 +194,7 @@ class Server(object):
         for peasant in self.__connected.values():
             peasant.close()
         self.__socket.close()
+        self.__socket = None
         # if the debug mode is on, then print information
         if self.__DEBUG:
             print "Finished Server.open function - closed all sockets"
@@ -204,7 +215,7 @@ class Server(object):
         """
         :return: if the server is open
         """
-        return not self.__closed
+        return not self.__closed and self.__socket is None
 
     def close(self):
         """

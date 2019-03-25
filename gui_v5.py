@@ -4,6 +4,7 @@
 from commands import Commands
 import Tkinter as tk
 import ttk
+import sys
 
 FONT = ("Fixedsys", 16)
 
@@ -30,8 +31,9 @@ class HighlightText(tk.Text):
             index = self.search(pattern, "matchEnd", "searchLimit", count=count, regexp=regexp)
             if index == "":
                 break
+            # degenerate pattern which matches zero-length strings
             if count.get() == 0:
-                break # degenerate pattern which matches zero-length strings
+                break
             self.mark_set("matchStart", index)
             self.mark_set("matchEnd", "%s+%sc" % (index, count.get()))
             self.tag_add(tag, "matchStart", "matchEnd")
@@ -44,8 +46,8 @@ class GUI(object):
         :param send_callback: the function to call if the user press the send button
         :param debug: debug mode (True-on, False-off)
         """
-        # if the server is closed
-        self.__closed = False
+        # if the gui is still running
+        self.__running = False
         # the function to call when pressing the button
         self.__send_callback = send_callback if send_callback is not None else self.__default_send_callback
         # the function to call when changing the command combo box
@@ -82,8 +84,6 @@ class GUI(object):
         peasant_label.grid(row=1, column=0)
 
         peasant_combobox = ttk.Combobox(self.__root, state="readonly", values=[], font=FONT)
-        if len(peasant_combobox["values"]):
-            peasant_combobox.set(peasant_combobox["values"][0])
         peasant_combobox.grid(row=1, column=1)
         self.__comboboxes['peasant'] = peasant_combobox
 
@@ -92,8 +92,6 @@ class GUI(object):
         command_label.grid(row=2, column=0)
 
         command_combobox = ttk.Combobox(self.__root, state="readonly", values=Commands.get_commands_names(), font=FONT)
-        if len(command_combobox["values"]):
-            command_combobox.set(command_combobox["values"][0])
         command_combobox.grid(row=2, column=1)
 
         self.__comboboxes['command'] = command_combobox
@@ -126,6 +124,15 @@ class GUI(object):
         for row in range(self.__root.grid_size()[1]):
             self.__root.grid_rowconfigure(row, weight=1)
 
+        # set default choice in combo boxes
+        if len(peasant_combobox["values"]):
+            peasant_combobox.set(peasant_combobox["values"][0])
+        if len(command_combobox["values"]):
+            command_combobox.set(command_combobox["values"][0])
+            self.__command_callback(
+                event="<<ComboboxSelected>>", root=self.__root, command=self.__comboboxes['command'].get(), entries=self.__entries,
+                regrid=[send_button, output])
+
     def __default_command_callback(self, event, root, command, entries, regrid):
         """
         Changes the entries to be the new command's parameters (via the Commands class)
@@ -138,8 +145,6 @@ class GUI(object):
         """
         if self.__DEBUG:
             print('--------DEFAULT COMMAND CALLBACK--------')
-        else:
-            print('------------COMMAND CALLBACK------------')
         # destroy all previous entries and remove them from the list
         for ent in entries[::-1]:
             l, e = ent
@@ -178,8 +183,6 @@ class GUI(object):
         """
         if self.__DEBUG:
             print('--------DEFAULT SEND CALLBACK--------')
-        else:
-            print('------------SEND CALLBACK------------')
         # print combo-boxes' values
         for cb in comboboxes.values():
             print "<" + str(cb.get()) + ">",
@@ -194,54 +197,87 @@ class GUI(object):
         :param address: the new peasant's address
         :return: nothing, void
         """
-        # save the combo-box in a variable
-        cb = self.__comboboxes['peasant']
-        # if the combo-box's values is empty
-        if not cb['values']:
-            # add a dummy into the values
-            cb['values'] += '$'
-            # add the address
-            cb['values'] += (str(address),)
-            # remove the dummy by setting the values to a tuple with only the address
-            cb['values'] = (str(address),)
-        # the combo-box's values isn't empty
-        else:
-            # add to the values a tuple with only the address
-            cb['values'] += (str(address),)
-        # print to the output that a new connection has been established
-        self.print_output("A New Connection From Address: <%s>" % str(address))
+        # if the gui is still running
+        if self.__running:
+            # save the combo-box in a variable
+            cb = self.__comboboxes['peasant']
+            # if the combo-box's values is empty
+            if not cb['values']:
+                # add a dummy into the values
+                cb['values'] += '$'
+                # add the address
+                cb['values'] += (str(address),)
+                # remove the dummy by setting the values to a tuple with only the address
+                cb['values'] = (str(address),)
+            # the combo-box's values isn't empty
+            else:
+                # add to the values a tuple with only the address
+                cb['values'] += (str(address),)
+            # print to the output that a new connection has been established
+            print "A New Connection From Address: <%s>" % str(address)
 
-    def print_output(self, text):
+    def remove_connection(self, address):
+        """
+        Remove an existing connection from the peasant's combo-box
+        :param address: the existing peasant's address
+        :return: nothing, void
+        """
+        # if the gui is still running
+        if self.__running:
+            # save the combo-box in a variable
+            cb = self.__comboboxes['peasant']['values']
+            # if the address is in the combo-box's values
+            if str(address) in cb:
+                cb = list(cb)
+                cb.remove(str(address))
+                self.__comboboxes['peasant']['values'] = tuple(cb)
+            # print to the output that an existing connection has been disconnected
+            print "<%s> has disconnected." % str(address)
+
+    def write(self, text):
         """
         A function to print to the gui some given text.
         :param text: the text to print to the gui
         :return: nothing, void
         """
-        self.__output.config(state=tk.NORMAL)
-        self.__output.insert(tk.END, text+'\n')
-        # add the red tag to all the ERROR msgs
-        self.__output.highlight_pattern("ERROR", "red")
-        # add the blue tag to all the DEBUG msgs
-        self.__output.highlight_pattern("DEBUG", "blue")
-        self.__output.config(state=tk.DISABLED)
+        # if the gui is still running
+        if self.__running:
+            self.__output.config(state=tk.NORMAL)
+            self.__output.insert(tk.END, text)
+            # add the red tag to all the ERROR msgs
+            self.__output.highlight_pattern("ERROR", "red")
+            # add the blue tag to all the DEBUG msgs
+            self.__output.highlight_pattern("DEBUG", "blue")
+            self.__output.config(state=tk.DISABLED)
 
     def run(self):
         """
         Runs the gui - the window (with Tkinter.Tk.mainloop())
         :return: nothing, void
         """
+        self.__running = True
         self.__root.mainloop()
+        self.__running = False
 
 
 if __name__ == '__main__':
-    # create a new master
+    previous_out = sys.stdout
+    # create a new gui
     gui = GUI()
-    gui.add_connection("127.0.0.1 : 80")
-    gui.add_connection("127.0.0.1 : 5400")
-    gui.add_connection("127.0.0.1 : 1000")
-    gui.print_output("hi there")
-    gui.print_output("my name is tal")
-    gui.print_output("ERROR: This is an error msg")
-    gui.print_output("DEBUG: This is a debug msg")
+    # set the stdout to be the gui
+    sys.stdout = gui
+    # check the add connection and write (print) functions
+
+    gui.add_connection("186.125.134.34 : 7854")
+    gui.add_connection("54.86.11.99 : 5114")
+    gui.add_connection("155.118.92.70 : 4521")
+    gui.add_connection("219.210.78.5 : 1148")
+    print "a regular print/writing"
+    print "ERROR: This is an error msg"
+    print "DEBUG: This is a debug msg"
+
     # run the gui
     gui.run()
+
+    # return the normal stdout
+    sys.stdout = previous_out
