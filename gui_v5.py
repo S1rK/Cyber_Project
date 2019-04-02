@@ -51,7 +51,7 @@ class GUI(object):
         # the function to call when changing the command combo box
         self.__command_callback = command_callback if command_callback is not None else self.__default_command_callback
         # the gui's window
-        self.__root = tk.Tk()
+        self.__root = tk.Tk('Command Center')
         # a list of the combo boxes
         self.__comboboxes = {}
         # a list of all the entries - (label, entry) for each parameter
@@ -71,41 +71,69 @@ class GUI(object):
         # if debug mode is on, print that right now initializing the gui
         if self.__DEBUG:
             print "Initializing The GUI"
+        # change the root's background color
+        self.__root.configure(background='black')
+        self.__root.title("Command Center")
         # add the title
-        title_label = tk.Label(self.__root, justify=tk.LEFT, font=FONT, text=""" _______ _______ _______ _______ _______  ______
- |  |  | |_____| |______    |    |______ |_____/
- |  |  | |     | ______|    |    |______ |    \_""")
+        title_label = tk.Label(self.__root, justify=tk.LEFT, font=FONT, text=""" _______  _____  _______ _______ _______ __   _ ______       _______ _______ __   _ _______ _______  ______
+ |       |     | |  |  | |  |  | |_____| | \  | |     \      |       |______ | \  |    |    |______ |_____/
+ |_____  |_____| |  |  | |  |  | |     | |  \_| |_____/      |_____  |______ |  \_|    |    |______ |    \_
+                                                                                    """)
+        title_label.configure(background='black', foreground='green')
         title_label.grid(row=0, column=0, columnspan=2)
 
+        # add the style
+        combostyle = ttk.Style()
+        combostyle.theme_create('combostyle', parent='alt',
+                                settings={'TCombobox':
+                                              {'configure':
+                                                   {'selectbackground': 'black', 'fieldbackground': 'black', 'background': 'green', 'foreground': 'green'}}})
+
+        # ATTENTION: this applies the new style 'combostyle' to all ttk.Combobox
+        combostyle.theme_use('combostyle')
+
         # add the peasant's ip (label and combo box)
-        peasant_label = tk.Label(self.__root, text="Peasant IP:", font=FONT)
+        peasant_label = tk.Label(self.__root, text="Peasant Address:", font=FONT)
+        peasant_label.configure(background='black', foreground='green')
         peasant_label.grid(row=1, column=0)
 
         peasant_combobox = ttk.Combobox(self.__root, state="readonly", values=[], font=FONT)
         peasant_combobox.grid(row=1, column=1)
+        peasant_combobox.configure(background='black', foreground='green')
         self.__comboboxes['peasant'] = peasant_combobox
 
         # add the command (label and combo box)
         command_label = tk.Label(self.__root, text="Command:", font=FONT)
+        command_label.configure(background='black', foreground='green')
         command_label.grid(row=2, column=0)
 
         command_combobox = ttk.Combobox(self.__root, state="readonly", values=Commands.get_commands_names(), font=FONT)
+        command_combobox.configure(background='black', foreground='green')
         command_combobox.grid(row=2, column=1)
 
         self.__comboboxes['command'] = command_combobox
 
         # add the send button
         send_button = tk.Button(self.__root, text="Send", font=FONT)
+        send_button.configure(background='black', foreground='green')
         send_button.grid(row=10, column=0, columnspan=2)
 
         # add the output highlight-able text
         output = HighlightText(self.__root, state=tk.DISABLED, font=FONT)
         output.config(state=tk.DISABLED, font=FONT)
+        output.configure(background='black', foreground='green')
         output.grid(row=11, column=0, columnspan=2)
         # add the red highlight tag
         output.tag_configure("red", foreground="red")
         # add the red highlight tag
         output.tag_configure("blue", foreground="blue")
+        # print to the screen a welcome message
+        output.config(state=tk.NORMAL)
+        output.insert(tk.END, """_ _ _ ____ _    ____ ____ _  _ ____    _  _ ____ ____ ___ ____ ____ 
+| | | |___ |    |    |  | |\/| |___    |\/| |__| [__   |  |___ |__/ 
+|_|_| |___ |___ |___ |__| |  | |___    |  | |  | ___]  |  |___ |  \ 
+                                                                    \n""")
+        output.config(state=tk.DISABLED)
         # set the member output to be the output we just used
         self.__output = output
 
@@ -113,8 +141,7 @@ class GUI(object):
         command_combobox.bind("<<ComboboxSelected>>", lambda event=None: self.__command_callback(
             event=event, root=self.__root, command=self.__comboboxes['command'].get(), entries=self.__entries,
             regrid=[send_button, output]))
-        send_button.bind("<Button-1>", lambda event=None: self.__send_callback(
-            event=event, comboboxes=self.__comboboxes, entries=self.__entries))
+        send_button.bind("<Button-1>", lambda event=None: self.__send_enhance_callback(event, [send_button, output]))
 
         # weight the grid
         for col in range(self.__root.grid_size()[0]):
@@ -122,14 +149,10 @@ class GUI(object):
         for row in range(self.__root.grid_size()[1]):
             self.__root.grid_rowconfigure(row, weight=1)
 
-        # set default choice in combo boxes
-        if len(peasant_combobox["values"]):
-            peasant_combobox.set(peasant_combobox["values"][0])
-        if len(command_combobox["values"]):
-            command_combobox.set(command_combobox["values"][0])
-            self.__command_callback(
-                event="<<ComboboxSelected>>", root=self.__root, command=self.__comboboxes['command'].get(), entries=self.__entries,
-                regrid=[send_button, output])
+    def __send_enhance_callback(self, event, regrid):
+        self.__send_callback(event, self.__comboboxes, self.__entries)
+        self.__command_callback("<<ComboboxSelected>>", self.__root, self.__comboboxes['command'].get(), self.__entries,
+                                regrid)
 
     def __default_command_callback(self, event, root, command, entries, regrid):
         """
@@ -156,11 +179,12 @@ class GUI(object):
         # get the row to add the new entries
         row = root.grid_size()[1]
         # create new entries based on the selected command
-        print command
         for entry in Commands.get_commands_parameters(command):
             # create label and entry
             l = tk.Label(root, text=str(entry) + ":", font=FONT)
             e = tk.Entry(root, font=FONT)
+            l.configure(background='black', foreground='green')
+            e.configure(background='black', foreground='green')
             l.grid(row=row, column=0)
             e.grid(row=row, column=1)
             row += 1
@@ -188,6 +212,7 @@ class GUI(object):
         # print entries' values
         for l, e in entries:
             print "<" + str(e.get()) + ">",
+            e.delete(0, tk.END)
 
     def add_connection(self, address):
         """
@@ -226,7 +251,8 @@ class GUI(object):
             cb.remove(str(address))
             self.__comboboxes['peasant']['values'] = tuple(cb)
         # print to the output that an existing connection has been disconnected
-        print "<%s> has disconnected." % str(address)
+        if self.__DEBUG:
+            print "DEBUG: Server Handled <%s> Disconnection." % str(address)
 
     def write(self, text):
         """
@@ -265,13 +291,12 @@ if __name__ == '__main__':
     sys.stdout = gui
 
     # check the add connection and write (print) functions
-    gui.add_connection("186.125.134.34 : 7854")
-    gui.add_connection("54.86.11.99 : 5114")
-    gui.add_connection("155.118.92.70 : 4521")
-    gui.add_connection("219.210.78.5 : 1148")
-    print "a regular print/writing"
-    print "ERROR: This is an error msg"
-    print "DEBUG: This is a debug msg"
+#    gui.add_connection("186.125.134.34 : 7854")
+#    gui.add_connection("54.86.11.99 : 5114")
+#    gui.add_connection("155.118.92.70 : 4521")
+#    gui.add_connection("219.210.78.5 : 1148")
+    #    print "ERROR: This is an error msg"
+#    print "DEBUG: This is a debug msg"
 
     # run the gui
     gui.run()

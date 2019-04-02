@@ -47,6 +47,7 @@ class Master(object):
         """
         # set the address to be in the format - ip : port
         address = "%s : %s" % (address[0], str(address[1]))
+        print "<%s> Has Disconnected" % address
         # add the new address to the gui
         self.__gui.remove_connection(address=address)
 
@@ -71,16 +72,20 @@ class Master(object):
             return
 
         address = address.split(" ")
+        # set the address to be in the format of tuple: (str(ip), int(port))
+        address = (address[0], int(address[2]))
+        # check if the client with this address is still connected
+        if address not in self.__server.get_address():
+            # print an error to the gui
+            print "ERROR: This Address Is No Longer Available."
+            # exit the function - there is no where to send the request
+            return
 
         command = comboboxes['command'].get()
         # check if there is an empty command
         if not command:
             print "ERROR: Empty Command."
 
-        # set the address to be in the format of tuple: (str(ip), int(port))
-        address = (address[0], int(address[2]))
-        # get the command
-        command = Commands.command_number(command)
         # get the params
         params = [e.get() for l, e in entries]
         # if debug is on then print them all
@@ -92,6 +97,13 @@ class Master(object):
         data = command_number + Commands.SEPARATE_CHAR.join(params)
         # send the request throw the server
         self.__server.send(address=address, data=data)
+        # clear the address combobox
+        comboboxes['peasant'].set('')
+        # clear the command combobox
+        comboboxes['command'].set('')
+        # clear the entries
+        for l, e in entries:
+            e.delete(0, 'end')
 
     def __handle_receiving(self, address, data):
         """
@@ -106,11 +118,13 @@ class Master(object):
         # separate the data to command number, params and response
         data = data.split(Commands.SEPARATE_CHAR)
         # get the response
-        command = data[0:Commands.COMMAND_LENGTH]
+        command = int(data[0])
         # get the request
-        response = data[Commands.COMMAND_LENGTH:]
-        # call the handle response
-        print "<%s : %s>: %s" % (address[0], address[1], Commands.handle_command_response(command)(response))
+        response = data[1:]
+        # get the response handle
+        result = Commands.handle_command_response(command, response)
+        # print the response
+        print "<%s : %s>: %s" % (address[0], address[1], result)
 
     def run(self):
         # set the stdout to be the gui

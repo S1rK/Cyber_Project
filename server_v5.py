@@ -136,7 +136,7 @@ class Server(object):
         # if the socket is closing the connection
         if not length:
             if self.__DEBUG:
-                print "<%s : %s> has disconnected" % (address[0], address[1])
+                print "DEBUG: <%s : %s> Is Disconnecting" % (address[0], address[1])
             # delete the socket from the connected dictionary
             del self.__connected[self.__get_address_by_socket(s)]
             # close the socket

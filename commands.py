@@ -100,11 +100,11 @@ class Commands(object):
 
     @staticmethod
     def __print_response(response):
-        print response
+        return response
 
     @staticmethod
     def __send_file_response(response):
-        print response
+        return 'Got The File!'
 
     """-----------------COMMANDS RELATED PUBLIC FUNCTIONS-----------------"""
 
@@ -137,7 +137,7 @@ class Commands(object):
         return commands[commands.keys()[command_number]][Commands.__REQUEST_INDEX](*args)
 
     @staticmethod
-    def handle_command_response(command_number, *args):
+    def handle_command_response(command_number, args):
         """
         :param command_number: the command's number
         :param args: a list of arguments to the command's response handler
@@ -153,7 +153,10 @@ class Commands(object):
         :param command_name: the command's name
         :return: the given command's parameters
         """
-        return Commands.__commands()[command_name][Commands.__PARAM_INDEX]
+        commands = Commands.__commands()
+        if command_name not in commands:
+            return []
+        return commands[command_name][Commands.__PARAM_INDEX]
 
     """-----------------HELPER PUBLIC FUNCTIONS-----------------"""
 
