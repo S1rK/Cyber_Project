@@ -28,7 +28,7 @@ class Peasant(object):
         # the path to the dir to save all the screenshots
         self.__save_dir = save_dir
         # current working directory
-        self.__cwd = 'C:\\'
+#        self.__cwd = 'C:\\'
         # debug mode
         self.__DEBUG = debug
 

@@ -40,7 +40,7 @@ class Server(object):
         self.__closed = False
         # a dict of the connected clients - (address : socket)
         self.__connected = {}
-        # a list of address and data to send to them - (address, data)
+        # a list of address and data to send to them - (socket, data)
         self.__to_send = []
         # a function to call when receiving a new connection
         self.__connection_callback = self.__default_connection_callback if connection_callback is None \
