@@ -110,24 +110,7 @@ class Master(object):
         # get the request
         response = data[Commands.COMMAND_LENGTH:]
         # call the handle response
-        self.__gui.write(Commands.handle_command_response(command)(response))
-
-    def __handle_response(self, address, response):
-        """
-        Handles the response from the peasant according to the request
-        :param address: the address of the peasant
-        :param response: the peasant's response
-        :return: nothing, void
-        """
-        # TODO: FINISH THIS SHIT BY PROTOCOL (CLIENT SENDING: COMMAND NUMBER(0-9)|RESPONSE)
-        # get the command
-        command = response[0:Commands.COMMAND_LENGTH]
-        # get the response itself
-        response = response[Commands.COMMAND_LENGTH:]
-
-        # call the response handler for this command and send if the response and the sender's address
-        # and print it's return value
-        print (Commands.handle_command_response(command)(response))
+        print "<%s : %s>: %s" % (address[0], address[1], Commands.handle_command_response(command)(response))
 
     def run(self):
         # set the stdout to be the gui
