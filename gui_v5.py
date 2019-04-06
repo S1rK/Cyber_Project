@@ -75,7 +75,8 @@ class GUI(object):
         self.__root.configure(background='black')
         self.__root.title("Command Center")
         # add the title
-        title_label = tk.Label(self.__root, justify=tk.LEFT, font=FONT, text=""" _______  _____  _______ _______ _______ __   _ ______       _______ _______ __   _ _______ _______  ______
+        title_label = tk.Label(self.__root, justify=tk.LEFT, font=FONT, text="""
+  _____   _____  _______ _______ _______ __   _ ______       ______  _______ __   _ _______ _______  ______
  |       |     | |  |  | |  |  | |_____| | \  | |     \      |       |______ | \  |    |    |______ |_____/
  |_____  |_____| |  |  | |  |  | |     | |  \_| |_____/      |_____  |______ |  \_|    |    |______ |    \_
                                                                                     """)
@@ -129,7 +130,7 @@ class GUI(object):
         output.tag_configure("blue", foreground="blue")
         # print to the screen a welcome message
         output.config(state=tk.NORMAL)
-        output.insert(tk.END, """_ _ _ ____ _    ____ ____ _  _ ____    _  _ ____ ____ ___ ____ ____ 
+        output.insert(tk.END, """_ _ _  ___ _     ___ ____ _  _  ___    _  _ ____ ____ ___  ___ ____ 
 | | | |___ |    |    |  | |\/| |___    |\/| |__| [__   |  |___ |__/ 
 |_|_| |___ |___ |___ |__| |  | |___    |  | |  | ___]  |  |___ |  \ 
                                                                     \n""")
