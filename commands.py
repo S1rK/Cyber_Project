@@ -42,7 +42,7 @@ class Commands(object):
     """-----------------COMMANDS REQUESTS HANDLERS-----------------"""
 
     @staticmethod
-    def __take_screenshot_request(socket):
+    def __take_screenshot_request(picture_name=""):
         # get the picture name
         picture_name = ""
         # take a screen shot
@@ -90,6 +90,8 @@ class Commands(object):
 
     @staticmethod
     def __text_to_speech_request(text):
+        if text == "":
+            raise ValueError("Text To Speech Got Empty String")
         sp = cl.Dispatch("SAPI.SpVoice")
         sp.Speak(text)
         return 'Said "%s"' % text
@@ -127,14 +129,24 @@ class Commands(object):
         return Commands.__commands().keys()
 
     @staticmethod
-    def handle_command_request(command_number, *args):
+    def handle_command_request(command_number, args):
         """
         :param command_number: the command's number
         :param args: a list of arguments to the command's request handler
         :return: the command's request return value
         """
+        # get all the command's
         commands = Commands.__commands()
-        return commands[commands.keys()[command_number]][Commands.__REQUEST_INDEX](*args)
+        # get the handle request function
+        handle_request_function = commands[commands.keys()[command_number]][Commands.__REQUEST_INDEX]
+        # set the default response to not enough parameters
+        response = "ERROR: Not Enough Parameters With %s Command" % commands.keys()[command_number]
+        # try to execute the request
+        try:
+            response = handle_request_function(*args)
+        finally:
+            # return the response
+            return response
 
     @staticmethod
     def handle_command_response(command_number, args):

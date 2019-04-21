@@ -115,12 +115,12 @@ class Master(object):
         # if the debug mode is on, print the received data
         if self.__DEBUG:
             print "DEBUG: received form <%s : %s> the following data: %s" % (address[0], address[1], data)
-        # separate the data to command number, params and response
-        data = data.split(Commands.SEPARATE_CHAR)
-        # get the response
-        command = int(data[0])
-        # get the request
-        response = data[1:]
+        # get the response's command
+        command = int(data[:Commands.COMMAND_LENGTH])
+        # throw away the command number from the response data
+        data = data[Commands.COMMAND_LENGTH:]
+        # separate the data to params and response
+        response = data.split(Commands.SEPARATE_CHAR)
         # get the response handle
         result = Commands.handle_command_response(command, response)
         # print the response

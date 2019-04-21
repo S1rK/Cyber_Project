@@ -28,6 +28,9 @@ if __name__ == '__main__':
     
     sp = cl.Dispatch("SAPI.SpVoice")
     sp.Speak("ELIRAN. STOP PLAYING CHESS")
+    
+    warapper(func1, 'hi ', 'there')
     """
 
-    warapper(func1, 'hi ', 'there')
+    x = "hi|there|boi"
+    print x.split('|')

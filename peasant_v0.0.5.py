@@ -3,12 +3,11 @@
 
 import socket
 from select import select
-from threading import Thread
 from commands import Commands
 
 
 class Peasant(object):
-    def __init__(self, ip='127.0.0.1', port='8220', save_dir='C:\\peasant\\', debug=False):
+    def __init__(self, ip='127.0.0.1', port=8220, save_dir='C:\\peasant\\', debug=False):
         """
         Create a new peasant
         :param ip: the ip of the master
@@ -38,11 +37,24 @@ class Peasant(object):
         :return: nothing, void.
         """
         # get the request's length
-        request_size = int(self.__socket.recv(Commands.SIZE_LENGTH)) - Commands.COMMAND_LENGTH
+        request_size = self.__socket.recv(Commands.SIZE_LENGTH)
+        # if the master sent an empty msg, then he has closed himself
+        if not request_size:
+            print "Master Has Been Closed"
+            # TODO: close the peasant and start the run function all over again
+            return
+        # fix the request's length
+        request_size = int(request_size) - Commands.COMMAND_LENGTH
         # get the request's command's number
         command = int(self.__socket.recv(Commands.COMMAND_LENGTH))
-        # handle the command and add the return value to the responses list
-        self.__responses.append(Commands.handle_command_request(command, self.__socket, request_size))
+        # if the request size's is 0, then there are not args
+        args = []
+        # else, there are args, read them
+        if request_size != 0:
+            args = self.__socket.recv(request_size).split(Commands.SEPARATE_CHAR)
+
+        # handle the command and add the command number and return value to the responses list
+        self.__responses.append(str(command) + Commands.handle_command_request(command, args))
 
     def __send_responses(self):
         """
@@ -64,24 +76,29 @@ class Peasant(object):
             if response in self.__responses:
                 self.__responses.remove(response)
 
-    def send(self, data):
-        self.__responses.append(data)
-
     def run(self):
         """
         Runs the peasant - connect to the master and receive commands,
         execute them and send results to the master.
         :return: nothing, void.
         """
-        # connect to the master
-        self.__socket.connect((self.__IP, self.__PORT))
+        # try to connect to the master until successfully connected
+        while True:
+            try:
+                print "connecting"
+                self.__socket.connect((self.__IP, self.__PORT))
+            except:
+                continue
+            else:
+                break
+        print "CONNECTED!"
 
         # the master command
         command = ""
         # while the master didn't close the connection with the peasant
         # and there aren't any requests to handle
         # and there aren't any responses to send to the master
-        while not (command.upper() == 'EXIT' and len(self.__responses) == 0 and len(self.__requests) == 0):
+        while not command.upper() == 'EXIT':
             # select - check if can receive or send to the master
             rlist, wlist, xlist = select([self.__socket], [self.__socket], [])
 
@@ -90,13 +107,10 @@ class Peasant(object):
                 # receive the master's request
                 self.__receive_request()
 
-            # handle all the current requests
-            self.__handle_requests()
-
             # if can send responses to the master, send them.
             if self.__socket in wlist:
                 # send the response to the master
-                self.send_response_to_master(response)
+                self.__send_responses()
 
         # close the connection and the socket
         self.__socket.close()
