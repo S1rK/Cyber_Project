@@ -158,7 +158,11 @@ class Server(object):
         """
         :return: the ips' of the connected clients
         """
-        return self.__connected.keys()
+        if not self.__closed:
+            return self.__connected.keys()
+        else:
+            print "ERROR: The Server Is Closed"
+            return []
 
     def open(self):
         """
@@ -206,10 +210,13 @@ class Server(object):
         :param data: the data to send
         :return: nothing, void
         """
-        # get the socket to send to
-        sock = self.__connected[address]
-        # add the socket and data to the 'to_send' list
-        self.__to_send.append((sock, data))
+        if not self.__closed:
+            # get the socket to send to
+            sock = self.__connected[address]
+            # add the socket and data to the 'to_send' list
+            self.__to_send.append((sock, data))
+        else:
+            print "ERROR: The Server Is Closed."
 
     def is_open(self):
         """

@@ -58,6 +58,8 @@ class GUI(object):
         self.__entries = []
         # a text box to print all the output to
         self.__output = None
+        # is alive
+        self.__alive = False
         # debug mode
         self.__DEBUG = debug
         # initialize the gui
@@ -221,22 +223,25 @@ class GUI(object):
         :param address: the new peasant's address
         :return: nothing, void
         """
-        # save the combo-box in a variable
-        cb = self.__comboboxes['peasant']
-        # if the combo-box's values is empty
-        if not cb['values']:
-            # add a dummy into the values
-            cb['values'] += '$'
-            # add the address
-            cb['values'] += (str(address),)
-            # remove the dummy by setting the values to a tuple with only the address
-            cb['values'] = (str(address),)
-        # the combo-box's values isn't empty
+        if self.__alive:
+            # save the combo-box in a variable
+            cb = self.__comboboxes['peasant']
+            # if the combo-box's values is empty
+            if not cb['values']:
+                # add a dummy into the values
+                cb['values'] += '$'
+                # add the address
+                cb['values'] += (str(address),)
+                # remove the dummy by setting the values to a tuple with only the address
+                cb['values'] = (str(address),)
+            # the combo-box's values isn't empty
+            else:
+                # add to the values a tuple with only the address
+                cb['values'] += (str(address),)
+            # print to the output that a new connection has been established
+            print "A New Connection From Address: <%s>" % str(address)
         else:
-            # add to the values a tuple with only the address
-            cb['values'] += (str(address),)
-        # print to the output that a new connection has been established
-        print "A New Connection From Address: <%s>" % str(address)
+            print "ERROR: The GUI Is Dead"
 
     def remove_connection(self, address):
         """
@@ -244,16 +249,19 @@ class GUI(object):
         :param address: the existing peasant's address
         :return: nothing, void
         """
-        # save the combo-box in a variable
-        cb = self.__comboboxes['peasant']['values']
-        # if the address is in the combo-box's values
-        if str(address) in cb:
-            cb = list(cb)
-            cb.remove(str(address))
-            self.__comboboxes['peasant']['values'] = tuple(cb)
-        # print to the output that an existing connection has been disconnected
-        if self.__DEBUG:
-            print "DEBUG: Server Handled <%s> Disconnection." % str(address)
+        if self.__alive:
+            # save the combo-box in a variable
+            cb = self.__comboboxes['peasant']['values']
+            # if the address is in the combo-box's values
+            if str(address) in cb:
+                cb = list(cb)
+                cb.remove(str(address))
+                self.__comboboxes['peasant']['values'] = tuple(cb)
+            # print to the output that an existing connection has been disconnected
+            if self.__DEBUG:
+                print "DEBUG: Server Handled <%s> Disconnection." % str(address)
+            else:
+                print "ERROR: The GUI Is Dead"
 
     def write(self, text):
         """
@@ -261,19 +269,25 @@ class GUI(object):
         :param text: the text to print to the gui
         :return: nothing, void
         """
-        self.__output.config(state=tk.NORMAL)
-        self.__output.insert(tk.END, text)
-        # add the red tag to all the ERROR msgs
-        self.__output.highlight_pattern("ERROR", "red")
-        # add the blue tag to all the DEBUG msgs
-        self.__output.highlight_pattern("DEBUG", "blue")
-        self.__output.config(state=tk.DISABLED)
+        if self.__alive:
+            self.__output.config(state=tk.NORMAL)
+            self.__output.insert(tk.END, text)
+            # add the red tag to all the ERROR msgs
+            self.__output.highlight_pattern("ERROR", "red")
+            # add the blue tag to all the DEBUG msgs
+            self.__output.highlight_pattern("DEBUG", "blue")
+            self.__output.config(state=tk.DISABLED)
+        else:
+            print "ERROR: The GUI Is Dead"
 
     def run(self):
         """
         Runs the gui - the window (with Tkinter.Tk.mainloop())
         :return: nothing, void
         """
+        # set alive to True
+        self.__alive = True
+
         # set the stdout to be the gui
         sys.stdout = self
 
@@ -282,6 +296,9 @@ class GUI(object):
 
         # return the normal stdout
         sys.stdout = sys.__stdout__
+
+        # set alive to False
+        self.__alive = False
 
 
 if __name__ == '__main__':
