@@ -30,7 +30,13 @@ if __name__ == '__main__':
     sp.Speak("ELIRAN. STOP PLAYING CHESS")
     
     warapper(func1, 'hi ', 'there')
-    """
+    
 
     x = "hi|there|boi"
     print x.split('|')
+
+    """
+
+    x = r"""C:\Users\Tal The Programmer\Desktop\test.txt"""
+    typ = x[x.find('.')+1:]
+    print typ

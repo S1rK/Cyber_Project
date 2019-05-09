@@ -6,6 +6,7 @@ import subprocess
 from shutil import copy
 from PIL import ImageGrab
 import win32com.client as cl
+import sys
 
 
 class Commands(object):
@@ -18,7 +19,7 @@ class Commands(object):
         """
         return {'Take Screen Shot': (Commands.__take_screenshot_request, Commands.__print_response, []),
                 'Download File': (Commands.__send_file_request, Commands.__send_file_response, ['File Name']),
-                'Dir': (Commands.__dir_request, Commands.__print_response, []),
+                'Dir': (Commands.__dir_request, Commands.__print_response, ['Directory']),
                 'Delete File': (Commands.__delete_request, Commands.__print_response, ['File Name']),
                 'Copy File': (Commands.__copy_request, Commands.__print_response, ['Source', 'Destination']),
                 'Execute': (Commands.__execute_request, Commands.__print_response, ['Executable File']),
@@ -31,7 +32,7 @@ class Commands(object):
     # the number of digits the length of a command
     COMMAND_LENGTH = 1
     # the special character that separates params' elements and command number
-    SEPARATE_CHAR = '|'
+    SEPARATE_CHAR = '$'
     # the number of images taken
     __image_number = 0
     # indexes in the dictionary
@@ -48,7 +49,7 @@ class Commands(object):
         # if there is no given name to the image
         if picture_name == "":
             # set the image's name to be image + image number
-            picture_name = "images%d" % Commands.__image_number
+            picture_name = os.getcwd() + "\\images%d" % Commands.__image_number
             # increase the number of images
             Commands.__image_number += 1
         # save the image with the image name as a png image
@@ -74,7 +75,10 @@ class Commands(object):
     @staticmethod
     def __dir_request(directory):
         files_list = os.listdir(directory)
-        return files_list
+        string = "\nFiles in '" + directory + "':\n"
+        for f in files_list:
+            string += str(f) + '\n'
+        return string
 
     @staticmethod
     def __send_file_request(file_name):
@@ -82,7 +86,8 @@ class Commands(object):
         with open(file_name, "rb") as f:
             data = f.read()
         # get the file's type
-        typ = file_name[:file_name.rfind('.')]
+        typ = file_name[file_name.rfind('.')+1:]
+        print >> sys.__stdout__, typ
         # return : {file's type}{separate char}{data}
         return typ + Commands.SEPARATE_CHAR + data
 
@@ -100,13 +105,14 @@ class Commands(object):
 
     @staticmethod
     def __print_response(response):
-        return response
+        return str(response)
 
     @staticmethod
-    def __send_file_response(response):
-        if response:
-            return 'Got The File!'
-        return 'Got Nothing'
+    def __send_file_response(typ, data):
+        filename = "f1." + typ
+        with open(filename, 'wb') as f:
+            f.write(data)
+        return "Saved at '" + os.getcwd() + "\\" + filename + "'"
 
     """-----------------COMMANDS RELATED PUBLIC FUNCTIONS-----------------"""
 
@@ -155,6 +161,7 @@ class Commands(object):
         :param args: a list of arguments to the command's response handler
         :return: the command's response return value
         """
+        sys.__stdout__.write(str(args))
         commands = Commands.__commands()
         return commands[commands.keys()[command_number]][Commands.__RESPONSE_INDEX](*args)
 

@@ -1,6 +1,7 @@
 # Tal's Mater Class
 # Version 5 - 14.2.19
 
+import sys
 import socket
 from time import sleep
 from select import select
@@ -10,18 +11,18 @@ from commands import Commands
 class Server(object):
     def __default_connection_callback(self, address):
         if self.__DEBUG:
-            print('--------DEFAULT CONNECTION CALLBACK--------')
+            print >> sys.__stdout__, '--------DEFAULT CONNECTION CALLBACK--------'
         print "new connection from: <%s : %d>" % (address[0], address[1])
 
     def __default_receiving_callback(self, address, data):
         if self.__DEBUG:
-            print('--------DEFAULT RECEIVING CALLBACK--------')
+            print >> sys.__stdout__, '--------DEFAULT RECEIVING CALLBACK--------'
         print "received from client: <%s : %s>" % (address[0], address[1])
         print "data: %s" % data
 
     def __default_disconnect_callback(self, address):
         if self.__DEBUG:
-            print
+            print >> sys.__stdout__, '--------DEFAULT DISCONNECT CALLBACK--------'
         print "<%s : %s> has disconnected" % (address[0], address[1])
 
     def __init__(self, ip='0.0.0.0', port=8220, connection_callback=None, receiving_callback=None,
@@ -117,7 +118,7 @@ class Server(object):
         # if DEBUG MODE on then print the data we sent
         if self.__DEBUG:
             address = self.__get_address_by_socket(sock)
-            print "Sent to <%s : %s> the following command:\n%s" % (address[0], address[1], data)
+            print >> sys.__stdout__, "Sent to <%s : %s> the following command:\n%s" % (address[0], address[1], data)
         # return true
         return True
 
@@ -137,7 +138,7 @@ class Server(object):
         # if the socket is closing the connection
         if not length:
             if self.__DEBUG:
-                print "DEBUG: <%s : %s> Is Disconnecting" % (address[0], address[1])
+                print >> sys.__stdout__, "DEBUG: <%s : %s> Is Disconnecting" % (address[0], address[1])
             # delete the socket from the connected dictionary
             del self.__connected[self.__get_address_by_socket(s)]
             # close the socket
@@ -151,7 +152,7 @@ class Server(object):
         # TODO: DECRYPT
         # if DEBUG MODE on then print the data we got
         if self.__DEBUG:
-            print "Got the following response from <%s : %s>:\n%s" % (address[0], str(address[1]), data)
+            print >> sys.__stdout__, "Got the following response from <%s : %s>:\n%s" % (address[0], str(address[1]), data)
         # return the data we got
         return data
 
@@ -177,7 +178,7 @@ class Server(object):
         # a counter to print while's parameters
         counter = 0
         # loop until the user requested to exit and finished receiving responses
-        while not (self.__closed and self.__counter == 0):
+        while not self.__closed:
             # get the list of the sockets we can read form and send to
             rlist, wlist, xlist = select([self.__socket] + self.__connected.values(), self.__connected.values(), [])
             # handle the sockets we can receive from
@@ -187,14 +188,14 @@ class Server(object):
             # if the debug mode is on
             if self.__DEBUG:
                 # increase the counter
-                counter = (counter+1) % 10**5
+                counter = (counter+1) % 10**8
                 # if the counter is 0
                 if not counter:
                     # print the while's parameters
-                    print "CLOSED: %s, COUNTER: %d" % (str(self.__closed), self.__counter)
+                    print >> sys.__stdout__, "CLOSED: %s, COUNTER: %d" % (str(self.__closed), self.__counter)
         # if the debug mode is on, then print information
         if self.__DEBUG:
-            print "Finished main loop. Closing sockets"
+            print >> sys.__stdout__, "Finished main loop. Closing sockets"
         # close all the clients' sockets and the server's socket
         for peasant in self.__connected.values():
             peasant.close()
@@ -202,7 +203,7 @@ class Server(object):
         self.__socket = None
         # if the debug mode is on, then print information
         if self.__DEBUG:
-            print "Finished Server.open function - closed all sockets"
+            print >> sys.__stdout__, "Finished Server.open function - closed all sockets"
 
     def send(self, address, data):
         """

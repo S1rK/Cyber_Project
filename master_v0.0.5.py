@@ -59,7 +59,7 @@ class Master(object):
         :return:
         """
         if self.__DEBUG:
-            print '------------SEND CALLBACK------------'
+            print >> sys.__stdout__, '------------SEND CALLBACK------------'
         # get the address to send the request
         address = combo_boxes['peasant'].get()
 
@@ -89,7 +89,7 @@ class Master(object):
         params = [e.get() for l, e in entries]
         # if debug is on then print them all
         if self.__DEBUG:
-            print "DEBUG: sending to <%s : %s> the command %s with those params: %s" % (address[0], str(address[1]),
+            print >> sys.__stdout__, "DEBUG: sending to <%s : %s> the command %s with those params: %s" % (address[0], str(address[1]),
                                                                                         command, params)
         # get the command's number
         command_number = Commands.command_number(command)
@@ -114,7 +114,7 @@ class Master(object):
         """
         # if the debug mode is on, print the received data
         if self.__DEBUG:
-            print "DEBUG: received form <%s : %s> the following data: %s" % (address[0], address[1], data)
+            print >> sys.__stdout__, "DEBUG: received form <%s : %s> the following data: %s" % (address[0], address[1], data)
         # get the response's command
         command = int(data[:Commands.COMMAND_LENGTH])
         # throw away the command number from the response data
@@ -156,6 +156,6 @@ class Master(object):
 
 if __name__ == '__main__':
     # create a new master
-    master = Master()
+    master = Master(debug=True)
     # run the master
     master.run()

@@ -72,7 +72,7 @@ class GUI(object):
         """
         # if debug mode is on, print that right now initializing the gui
         if self.__DEBUG:
-            print "Initializing The GUI"
+            print >> sys.__stdout__, "Initializing The GUI"
         # change the root's background color
         self.__root.configure(background='black')
         self.__root.title("Command Center")
@@ -142,7 +142,7 @@ class GUI(object):
         # bind the command combo-box and the send button to their respective callback functions
         command_combobox.bind("<<ComboboxSelected>>", lambda event=None: self.__command_callback(
             root=self.__root, command=self.__comboboxes['command'].get(), entries=self.__entries,
-            regrid=[send_button, output]))
+            re_grid=[send_button, output]))
         send_button.bind("<Button-1>", lambda event=None: self.__send_enhance_callback([send_button, output]))
 
         # weight the grid
@@ -153,7 +153,7 @@ class GUI(object):
 
     def __send_enhance_callback(self, re_grid):
         self.__send_callback(self.__comboboxes, self.__entries)
-        self.__command_callback("<<ComboboxSelected>>", self.__root, self.__comboboxes['command'].get(), self.__entries,
+        self.__command_callback(self.__root, self.__comboboxes['command'].get(), self.__entries,
                                 re_grid)
 
     def __default_command_callback(self, root, command, entries, re_grid):
@@ -166,7 +166,7 @@ class GUI(object):
         :return:
         """
         if self.__DEBUG:
-            print('--------DEFAULT COMMAND CALLBACK--------')
+            print >> sys.__stdout__, '--------DEFAULT COMMAND CALLBACK--------'
         # destroy all previous entries and remove them from the list
         for ent in entries[::-1]:
             l, e = ent
@@ -204,7 +204,7 @@ class GUI(object):
         :return:
         """
         if self.__DEBUG:
-            print('--------DEFAULT SEND CALLBACK--------')
+            print >> sys.__stdout__, '--------DEFAULT SEND CALLBACK--------'
         # print combo-boxes' values
         for cb in comboboxes.values():
             print "<" + str(cb.get()) + ">",

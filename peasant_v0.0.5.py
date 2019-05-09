@@ -52,7 +52,7 @@ class Peasant(object):
         # else, there are args, read them
         if request_size != 0:
             args = self.__socket.recv(request_size).split(Commands.SEPARATE_CHAR)
-
+        print args
         # handle the command and add the command number and return value to the responses list
         self.__responses.append(str(command) + Commands.handle_command_request(command, args))
         return 1
@@ -90,6 +90,8 @@ class Peasant(object):
                 self.__socket.connect((self.__IP, self.__PORT))
             except socket.timeout:
                 continue
+            except socket.error:
+                continue
             else:
                 break
         print "CONNECTED!"
@@ -119,6 +121,6 @@ class Peasant(object):
 
 if __name__ == '__main__':
     # create a new peasant
-    peasant = Peasant()
+    peasant = Peasant(debug=True)
     # run the peasant
     peasant.run()
