@@ -17,7 +17,7 @@ class Commands(object):
         The commands in the format of - command's name : (command's function, command's parameters)
         :return:
         """
-        return {'Take Screen Shot': (Commands.__take_screenshot_request, Commands.__print_response, []),
+        return {'Take Screen Shot': (Commands.__take_screenshot_request, Commands.__print_response, ['Picture Name']),
                 'Download File': (Commands.__send_file_request, Commands.__send_file_response, ['File Name']),
                 'Dir': (Commands.__dir_request, Commands.__print_response, ['Directory']),
                 'Delete File': (Commands.__delete_request, Commands.__print_response, ['File Name']),
@@ -32,9 +32,11 @@ class Commands(object):
     # the number of digits the length of a command
     COMMAND_LENGTH = 1
     # the special character that separates params' elements and command number
-    SEPARATE_CHAR = '$'
+    SEPARATE_CHAR = '~'
     # the number of images taken
     __image_number = 0
+    # the number of files downloaded
+    __file_number = 0
     # indexes in the dictionary
     __REQUEST_INDEX = 0
     __RESPONSE_INDEX = 1
@@ -49,11 +51,17 @@ class Commands(object):
         # if there is no given name to the image
         if picture_name == "":
             # set the image's name to be image + image number
-            picture_name = os.getcwd() + "\\images%d" % Commands.__image_number
+            picture_name = os.getcwd() + "\\image%d.png" % Commands.__image_number
             # increase the number of images
             Commands.__image_number += 1
+        # check if the given name ends with '.png'
+        else:
+            # if not then add to the end of the name
+            if picture_name[-4:] != ".png":
+                picture_name += ".png"
+
         # save the image with the image name as a png image
-        im.save(picture_name+".png", "PNG")
+        im.save(picture_name, "PNG")
         # return "saved at " + the picture's name
         return "Saved at " + str(picture_name)
 
@@ -87,7 +95,7 @@ class Commands(object):
             data = f.read()
         # get the file's type
         typ = file_name[file_name.rfind('.')+1:]
-        print >> sys.__stdout__, typ
+        print >> sys.__stdout__, data.count(Commands.SEPARATE_CHAR)
         # return : {file's type}{separate char}{data}
         return typ + Commands.SEPARATE_CHAR + data
 
@@ -108,10 +116,13 @@ class Commands(object):
         return str(response)
 
     @staticmethod
-    def __send_file_response(typ, data):
-        filename = "f1." + typ
+    def __send_file_response(typ, *data):
+        # build the file name
+        filename = "f%d.%s" % (Commands.__file_number, typ)
+        Commands.__file_number += 1
+        # open it and write inside it all the data
         with open(filename, 'wb') as f:
-            f.write(data)
+            f.write(Commands.SEPARATE_CHAR.join(data))
         return "Saved at '" + os.getcwd() + "\\" + filename + "'"
 
     """-----------------COMMANDS RELATED PUBLIC FUNCTIONS-----------------"""

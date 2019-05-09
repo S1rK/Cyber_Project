@@ -156,6 +156,6 @@ class Master(object):
 
 if __name__ == '__main__':
     # create a new master
-    master = Master(debug=True)
+    master = Master()
     # run the master
     master.run()

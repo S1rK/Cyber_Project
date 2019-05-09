@@ -126,6 +126,6 @@ class Peasant(object):
 
 if __name__ == '__main__':
     # create a new peasant
-    peasant = Peasant(debug=True)
+    peasant = Peasant()
     # run the peasant
     peasant.run()

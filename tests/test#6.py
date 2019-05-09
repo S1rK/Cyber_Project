@@ -35,8 +35,12 @@ if __name__ == '__main__':
     x = "hi|there|boi"
     print x.split('|')
 
-    """
-
-    x = r"""C:\Users\Tal The Programmer\Desktop\test.txt"""
+    x = "C:\\Users\\Tal The Programmer\\Desktop\\test.txt"
     typ = x[x.find('.')+1:]
     print typ
+    """
+
+    picture_name = "h"
+    if picture_name[-4:] != ".png":
+        picture_name += ".png"
+    print picture_name
