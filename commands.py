@@ -67,21 +67,42 @@ class Commands(object):
 
     @staticmethod
     def __copy_request(src, dest):
+        # if file doesn't exist, return SystemError
+        if not os.path.exists(src):
+            return SystemError("%s Doesn't Exist" % src)
+        # if the file's name isn't a file, return SystemError
+        if not os.path.isfile(src):
+            return SystemError("%s Isn't A File" % src)
         copy(src, dest)
         return 'Copied %s to %s' % (str(src), str(dest))
 
     @staticmethod
     def __execute_request(to_execute):
+        # if file doesn't exist, return SystemError
+        if not os.path.exists(to_execute):
+            return SystemError("%s Doesn't Exist" % to_execute)
+        # if the file's name isn't a file, return SystemError
+        if not os.path.isfile(to_execute):
+            return SystemError("%s Isn't A File" % to_execute)
         subprocess.call(to_execute)
         return 'Executed %s' % str(to_execute)
 
     @staticmethod
     def __delete_request(to_delete):
+        # if item doesn't exist, return SystemError
+        if not os.path.exists(to_delete):
+            return SystemError("%s Doesn't Exist." % to_delete)
         os.remove(to_delete)
         return 'Deleted %s' % str(to_delete)
 
     @staticmethod
     def __dir_request(directory):
+        # if directory doesn't exist, return SystemError
+        if not os.path.exists(directory):
+            return SystemError("%s Doesn't Exist." % directory)
+        # if directory's name isn't a directory, return SystemError
+        if not os.path.isdir(directory):
+            return SystemError("%s Isn't A Directory." % directory)
         files_list = os.listdir(directory)
         string = "\nFiles in '" + directory + "':\n"
         for f in files_list:
@@ -90,12 +111,17 @@ class Commands(object):
 
     @staticmethod
     def __send_file_request(file_name):
+        # if file doesn't exist, return SystemError
+        if not os.path.exists(file_name):
+            return SystemError("%s Doesn't Exist" % file_name)
+        # if the file's name isn't a file, return SystemError
+        if not os.path.isfile(file_name):
+            return SystemError("%s Isn't A File" % file_name)
         # get the file's data as binary data
         with open(file_name, "rb") as f:
             data = f.read()
         # get the file's type
         typ = file_name[file_name.rfind('.')+1:]
-        print >> sys.__stdout__, data.count(Commands.SEPARATE_CHAR)
         # return : {file's type}{separate char}{data}
         return typ + Commands.SEPARATE_CHAR + data
 
@@ -158,12 +184,18 @@ class Commands(object):
         handle_request_function = commands[commands.keys()[command_number]][Commands.__REQUEST_INDEX]
         # set the default response to not enough parameters
         response = "ERROR: Not Enough Parameters With %s Command" % commands.keys()[command_number]
-        # try to execute the request
+        # try to execute the request adn return it's result
         try:
-            response = handle_request_function(*args)
-        finally:
+            return handle_request_function(*args)
+        # if not enough parameters
+        except TypeError as e:
+            # notify the master about how many parameters were given, and how many needed
+            nums = [int(s) for s in e.message if s.isdigit()]
+            return "ERROR: %s Command Got %d Parameters. Expected %d." %\
+                   (commands.keys()[command_number], nums[0], nums[1])
+        except SystemError as e:
             # return the response
-            return response
+            return "ERROR: In %s Command: %s" % (commands.keys()[command_number], e.message)
 
     @staticmethod
     def handle_command_response(command_number, args):

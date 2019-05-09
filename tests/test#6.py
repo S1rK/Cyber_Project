@@ -38,9 +38,17 @@ if __name__ == '__main__':
     x = "C:\\Users\\Tal The Programmer\\Desktop\\test.txt"
     typ = x[x.find('.')+1:]
     print typ
-    """
+
 
     picture_name = "h"
     if picture_name[-4:] != ".png":
         picture_name += ".png"
     print picture_name
+    
+    """
+    try:
+        func1(1)
+    except TypeError as e:
+        nums = [int(s) for s in e.message if s.isdigit()]
+        print "ERROR: %s Command Got %d Parameters. Expected %d." % \
+               ("func1", nums[0], nums[1])
