@@ -34,7 +34,7 @@ class Peasant(object):
     def __receive_request(self):
         """
         Receives the full message sent by the master.
-        :return: nothing, void.
+        :return: keep alive
         """
         # get the request's length
         request_size = self.__socket.recv(Commands.SIZE_LENGTH)
@@ -42,7 +42,7 @@ class Peasant(object):
         if not request_size:
             print "Master Has Been Closed"
             # TODO: close the peasant and start the run function all over again
-            return
+            return 0
         # fix the request's length
         request_size = int(request_size) - Commands.COMMAND_LENGTH
         # get the request's command's number
@@ -55,6 +55,7 @@ class Peasant(object):
 
         # handle the command and add the command number and return value to the responses list
         self.__responses.append(str(command) + Commands.handle_command_request(command, args))
+        return 1
 
     def __send_responses(self):
         """
@@ -85,9 +86,9 @@ class Peasant(object):
         # try to connect to the master until successfully connected
         while True:
             try:
-                print "connecting"
+                print "Connecting"
                 self.__socket.connect((self.__IP, self.__PORT))
-            except:
+            except socket.timeout:
                 continue
             else:
                 break

@@ -24,7 +24,8 @@ class Server(object):
             print
         print "<%s : %s> has disconnected" % (address[0], address[1])
 
-    def __init__(self, ip='0.0.0.0', port=8220, connection_callback=None, receiving_callback=None, disconnect_callback=None, debug=False):
+    def __init__(self, ip='0.0.0.0', port=8220, connection_callback=None, receiving_callback=None,
+                 disconnect_callback=None, debug=False):
         """
         :param ip: the ip of the master
         :param port: the port of the master socket
@@ -104,7 +105,7 @@ class Server(object):
         """
         Sends the data to the given socket. First the length of the data
         (DATA_LENGTH digits), and then the data itself.
-        :param s: the socket to send the data to
+        :param sock: the socket to send the data to
         :param data: the data we want to send to the socket
         :return: if succeeded.
         """

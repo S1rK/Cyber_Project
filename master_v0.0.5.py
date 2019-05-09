@@ -51,18 +51,17 @@ class Master(object):
         # add the new address to the gui
         self.__gui.remove_connection(address=address)
 
-    def __handle_sending(self, event=None, comboboxes={}, entries=[]):
+    def __handle_sending(self, combo_boxes, entries):
         """
         Prints the combo-boxes' and entries' values
-        :param event: the event - <Button-1>
-        :param comboboxes: all the combo-boxes
+        :param combo_boxes: all the combo-boxes
         :param entries: all the entries
         :return:
         """
         if self.__DEBUG:
             print '------------SEND CALLBACK------------'
         # get the address to send the request
-        address = comboboxes['peasant'].get()
+        address = combo_boxes['peasant'].get()
 
         # check if there is an empty address
         if not address:
@@ -81,7 +80,7 @@ class Master(object):
             # exit the function - there is no where to send the request
             return
 
-        command = comboboxes['command'].get()
+        command = combo_boxes['command'].get()
         # check if there is an empty command
         if not command:
             print "ERROR: Empty Command."
@@ -90,7 +89,8 @@ class Master(object):
         params = [e.get() for l, e in entries]
         # if debug is on then print them all
         if self.__DEBUG:
-            print "DEBUG: sending to <%s : %s> the command %s with those params: %s" % (address[0], str(address[1]), command, params)
+            print "DEBUG: sending to <%s : %s> the command %s with those params: %s" % (address[0], str(address[1]),
+                                                                                        command, params)
         # get the command's number
         command_number = Commands.command_number(command)
         # combine all the arguments to one message to send to the peasant
@@ -98,9 +98,9 @@ class Master(object):
         # send the request throw the server
         self.__server.send(address=address, data=data)
         # clear the address combobox
-        comboboxes['peasant'].set('')
+        combo_boxes['peasant'].set('')
         # clear the command combobox
-        comboboxes['command'].set('')
+        combo_boxes['command'].set('')
         # clear the entries
         for l, e in entries:
             e.delete(0, 'end')

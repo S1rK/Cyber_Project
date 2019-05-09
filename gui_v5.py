@@ -2,17 +2,17 @@
 # Version 5 - 14.2.19
 
 from commands import Commands
-import Tkinter as tk
+import Tkinter as Tk
 import ttk
 import sys
 
 FONT = ("Fixedsys", 16)
 
 
-class HighlightText(tk.Text):
+class HighlightText(Tk.Text):
     """A text widget with a new method, highlight_pattern()"""
     def __init__(self, *args, **kwargs):
-        tk.Text.__init__(self, *args, **kwargs)
+        Tk.Text.__init__(self, *args, **kwargs)
 
     def highlight_pattern(self, pattern, tag, start="1.0", end="end", regexp=False):
         """Apply the given tag to all text that matches the given pattern
@@ -26,7 +26,7 @@ class HighlightText(tk.Text):
         self.mark_set("matchEnd", start)
         self.mark_set("searchLimit", end)
 
-        count = tk.IntVar()
+        count = Tk.IntVar()
         while True:
             index = self.search(pattern, "matchEnd", "searchLimit", count=count, regexp=regexp)
             if index == "":
@@ -51,7 +51,7 @@ class GUI(object):
         # the function to call when changing the command combo box
         self.__command_callback = command_callback if command_callback is not None else self.__default_command_callback
         # the gui's window
-        self.__root = tk.Tk('Command Center')
+        self.__root = Tk.Tk('Command Center')
         # a list of the combo boxes
         self.__comboboxes = {}
         # a list of all the entries - (label, entry) for each parameter
@@ -77,7 +77,7 @@ class GUI(object):
         self.__root.configure(background='black')
         self.__root.title("Command Center")
         # add the title
-        title_label = tk.Label(self.__root, justify=tk.LEFT, font=FONT, text="""
+        title_label = Tk.Label(self.__root, justify=Tk.LEFT, font=FONT, text="""
   _____   _____  _______ _______ _______ __   _ ______       ______  _______ __   _ _______ _______  ______
  |       |     | |  |  | |  |  | |_____| | \  | |     \      |       |______ | \  |    |    |______ |_____/
  |_____  |_____| |  |  | |  |  | |     | |  \_| |_____/      |_____  |______ |  \_|    |    |______ |    \_
@@ -87,16 +87,15 @@ class GUI(object):
 
         # add the style
         combostyle = ttk.Style()
-        combostyle.theme_create('combostyle', parent='alt',
-                                settings={'TCombobox':
-                                              {'configure':
-                                                   {'selectbackground': 'black', 'fieldbackground': 'black', 'background': 'green', 'foreground': 'green'}}})
+        combostyle.theme_create('combostyle', parent='alt', settings={'TCombobox': {
+            'configure': {'selectbackground': 'black', 'fieldbackground': 'black', 'background': 'green',
+                          'foreground': 'green'}}})
 
         # ATTENTION: this applies the new style 'combostyle' to all ttk.Combobox
         combostyle.theme_use('combostyle')
 
         # add the peasant's ip (label and combo box)
-        peasant_label = tk.Label(self.__root, text="Peasant Address:", font=FONT)
+        peasant_label = Tk.Label(self.__root, text="Peasant Address:", font=FONT)
         peasant_label.configure(background='black', foreground='green')
         peasant_label.grid(row=1, column=0)
 
@@ -106,7 +105,7 @@ class GUI(object):
         self.__comboboxes['peasant'] = peasant_combobox
 
         # add the command (label and combo box)
-        command_label = tk.Label(self.__root, text="Command:", font=FONT)
+        command_label = Tk.Label(self.__root, text="Command:", font=FONT)
         command_label.configure(background='black', foreground='green')
         command_label.grid(row=2, column=0)
 
@@ -117,13 +116,13 @@ class GUI(object):
         self.__comboboxes['command'] = command_combobox
 
         # add the send button
-        send_button = tk.Button(self.__root, text="Send", font=FONT)
+        send_button = Tk.Button(self.__root, text="Send", font=FONT)
         send_button.configure(background='black', foreground='green')
         send_button.grid(row=10, column=0, columnspan=2)
 
         # add the output highlight-able text
-        output = HighlightText(self.__root, state=tk.DISABLED, font=FONT)
-        output.config(state=tk.DISABLED, font=FONT)
+        output = HighlightText(self.__root, state=Tk.DISABLED, font=FONT)
+        output.config(state=Tk.DISABLED, font=FONT)
         output.configure(background='black', foreground='green')
         output.grid(row=11, column=0, columnspan=2)
         # add the red highlight tag
@@ -131,20 +130,20 @@ class GUI(object):
         # add the red highlight tag
         output.tag_configure("blue", foreground="blue")
         # print to the screen a welcome message
-        output.config(state=tk.NORMAL)
-        output.insert(tk.END, """_ _ _  ___ _     ___ ____ _  _  ___    _  _ ____ ____ ___  ___ ____ 
+        output.config(state=Tk.NORMAL)
+        output.insert(Tk.END, """_ _ _  ___ _     ___ ____ _  _  ___    _  _ ____ ____ ___  ___ ____ 
 | | | |___ |    |    |  | |\/| |___    |\/| |__| [__   |  |___ |__/ 
 |_|_| |___ |___ |___ |__| |  | |___    |  | |  | ___]  |  |___ |  \ 
                                                                     \n""")
-        output.config(state=tk.DISABLED)
+        output.config(state=Tk.DISABLED)
         # set the member output to be the output we just used
         self.__output = output
 
         # bind the command combo-box and the send button to their respective callback functions
         command_combobox.bind("<<ComboboxSelected>>", lambda event=None: self.__command_callback(
-            event=event, root=self.__root, command=self.__comboboxes['command'].get(), entries=self.__entries,
+            root=self.__root, command=self.__comboboxes['command'].get(), entries=self.__entries,
             regrid=[send_button, output]))
-        send_button.bind("<Button-1>", lambda event=None: self.__send_enhance_callback(event, [send_button, output]))
+        send_button.bind("<Button-1>", lambda event=None: self.__send_enhance_callback([send_button, output]))
 
         # weight the grid
         for col in range(self.__root.grid_size()[0]):
@@ -152,19 +151,18 @@ class GUI(object):
         for row in range(self.__root.grid_size()[1]):
             self.__root.grid_rowconfigure(row, weight=1)
 
-    def __send_enhance_callback(self, event, regrid):
-        self.__send_callback(event, self.__comboboxes, self.__entries)
+    def __send_enhance_callback(self, re_grid):
+        self.__send_callback(self.__comboboxes, self.__entries)
         self.__command_callback("<<ComboboxSelected>>", self.__root, self.__comboboxes['command'].get(), self.__entries,
-                                regrid)
+                                re_grid)
 
-    def __default_command_callback(self, event, root, command, entries, regrid):
+    def __default_command_callback(self, root, command, entries, re_grid):
         """
         Changes the entries to be the new command's parameters (via the Commands class)
-        :param event: the event - <<ComboboxSelected>>
         :param root: the Tk'swindows
         :param command: the chosen command
         :param entries: the current entries
-        :param regrid: what should be re-grid after changing the entries
+        :param re_grid: what should be re-grid after changing the entries
         :return:
         """
         if self.__DEBUG:
@@ -176,7 +174,7 @@ class GUI(object):
             e.destroy()
             entries.remove(ent)
         # forger grid of the widgets below the entries
-        for w in regrid:
+        for w in re_grid:
             w.grid_forget()
 
         # get the row to add the new entries
@@ -184,24 +182,23 @@ class GUI(object):
         # create new entries based on the selected command
         for entry in Commands.get_commands_parameters(command):
             # create label and entry
-            l = tk.Label(root, text=str(entry) + ":", font=FONT)
-            e = tk.Entry(root, font=FONT)
-            l.configure(background='black', foreground='green')
+            label = Tk.Label(root, text=str(entry) + ":", font=FONT)
+            e = Tk.Entry(root, font=FONT)
+            label.configure(background='black', foreground='green')
             e.configure(background='black', foreground='green')
-            l.grid(row=row, column=0)
+            label.grid(row=row, column=0)
             e.grid(row=row, column=1)
             row += 1
-            entries.append((l, e))
+            entries.append((label, e))
 
         # re grid the widgets to be below the new entries
-        for w in regrid:
+        for w in re_grid:
             w.grid(row=row, columnspan=2)
             row += 1
 
-    def __default_send_callback(self, event, comboboxes, entries):
+    def __default_send_callback(self, comboboxes, entries):
         """
         Prints the combo-boxes' and entries' values
-        :param event: the event - <Button-1>
         :param comboboxes: all the combo-boxes
         :param entries: all the entries
         :return:
@@ -215,7 +212,7 @@ class GUI(object):
         # print entries' values
         for l, e in entries:
             print "<" + str(e.get()) + ">",
-            e.delete(0, tk.END)
+            e.delete(0, Tk.END)
 
     def add_connection(self, address):
         """
@@ -270,13 +267,13 @@ class GUI(object):
         :return: nothing, void
         """
         if self.__alive:
-            self.__output.config(state=tk.NORMAL)
-            self.__output.insert(tk.END, text)
+            self.__output.config(state=Tk.NORMAL)
+            self.__output.insert(Tk.END, text)
             # add the red tag to all the ERROR msgs
             self.__output.highlight_pattern("ERROR", "red")
             # add the blue tag to all the DEBUG msgs
             self.__output.highlight_pattern("DEBUG", "blue")
-            self.__output.config(state=tk.DISABLED)
+            self.__output.config(state=Tk.DISABLED)
         else:
             print "ERROR: The GUI Is Dead"
 

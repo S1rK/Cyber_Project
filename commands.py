@@ -43,8 +43,6 @@ class Commands(object):
 
     @staticmethod
     def __take_screenshot_request(picture_name=""):
-        # get the picture name
-        picture_name = ""
         # take a screen shot
         im = ImageGrab.grab()
         # if there is no given name to the image
