@@ -104,7 +104,9 @@ class Commands(object):
 
     @staticmethod
     def __send_file_response(response):
-        return 'Got The File!'
+        if response:
+            return 'Got The File!'
+        return 'Got Nothing'
 
     """-----------------COMMANDS RELATED PUBLIC FUNCTIONS-----------------"""
 
