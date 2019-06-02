@@ -1,5 +1,5 @@
-# Tal's Mater Class
-# Version 5 - 14.2.19
+# Tal's Server Class
+# Version 7 - 1.6.19
 
 import sys
 import socket
@@ -62,7 +62,11 @@ class Server(object):
         :param sock: a socket we want to know it's ip
         :return: Returns the address of a socket
         """
-        return self.__connected.keys()[self.__connected.values().index(sock)]
+        add = "<?? : ??>"
+        try:
+            add = self.__connected.keys()[self.__connected.values().index(sock)]
+        finally:
+            return add
 
     def __handle_sending(self, wlist):
         # copy the requests list
@@ -86,10 +90,20 @@ class Server(object):
             if s is self.__socket:
                 # get the new socket and address (address is a tuple of ip and port)
                 (new_socket, address) = self.__socket.accept()
-                # add the new client to the open sockets list
-                self.__connected[address] = new_socket
-                # call the new connection callback
-                self.__connection_callback(address)
+
+                # verify the client
+                hashed = self.__recv_from_socket(new_socket)
+                # if verified
+                if Commands.check_hash(hashed):
+                    # add the new client to the open sockets list
+                    self.__connected[address] = new_socket
+                    # call the new connection callback
+                    self.__connection_callback(address)
+                # else, not verified
+                else:
+                    # disconnect him
+                    new_socket.close()
+                    print "NOTE: A connection from <%s : %d> was rejected because verification" % (address[0], address[1])
             else:
                 # get the address of the sending client
                 address = self.__get_address_by_socket(s)
@@ -110,11 +124,12 @@ class Server(object):
         :param data: the data we want to send to the socket
         :return: if succeeded.
         """
-        # TODO: ENCRYPT
+        # encrypt the data
+        encrypted = Commands.encrypt(data)
         # get the data's length
-        data_len = Commands.pad_length(len(data))
-        # send the whole message - length and then the data itself
-        sock.send(data_len + data)
+        data_len = Commands.pad_length(len(encrypted))
+        # send the whole message - length and then the data itself encrypted
+        sock.send(data_len + encrypted)
         # if DEBUG MODE on then print the data we sent
         if self.__DEBUG:
             address = self.__get_address_by_socket(sock)
@@ -145,10 +160,12 @@ class Server(object):
             s.close()
             # return the exit command
             return "EXIT"
+        if not length.isdigit():
+            return "ERROR: Got Length Not Int"
         # else, there is data. convert the length to int
         length = int(length)
-        # get the data itself
-        data = s.recv(length)
+        # get the data itself (decrypted)
+        data = Commands.decrypt(s.recv(length))
         # TODO: DECRYPT
         # if DEBUG MODE on then print the data we got
         if self.__DEBUG:
@@ -172,7 +189,6 @@ class Server(object):
         :return: nothing, void
         """
         import sys
-        print >> sys.__stdout__, "YES?"
         # open the socket to listen up to 5 connections
         self.__socket.listen(5)
         # a counter to print while's parameters

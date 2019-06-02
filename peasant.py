@@ -1,5 +1,5 @@
 # Tal's Peasant Class
-# Version 6 - 14.2.19
+# Version 7 - 1.6.19
 
 import socket
 from select import select
@@ -46,13 +46,14 @@ class Peasant(object):
         # fix the request's length
         request_size = int(request_size) - Commands.COMMAND_LENGTH
         # get the request's command's number
-        command = int(self.__socket.recv(Commands.COMMAND_LENGTH))
+        command = int(Commands.decrypt(self.__socket.recv(Commands.COMMAND_LENGTH)))
         # if the request size's is 0, then there are not args
         args = []
-        # else, there are args, read them
+        # else, there are args, read them (decrypted)
         if request_size != 0:
-            args = self.__socket.recv(request_size).split(Commands.SEPARATE_CHAR)
-        print args
+            args = Commands.decrypt(self.__socket.recv(request_size)).split(Commands.SEPARATE_CHAR)
+        if self.__DEBUG:
+            print args
         # handle the command and add the command number and return value to the responses list
         self.__responses.append(str(command) + Commands.handle_command_request(command, args))
         return True
@@ -66,16 +67,22 @@ class Peasant(object):
         responses = self.__responses
         # for every response
         for response in responses:
-            if self.__DEBUG:
-                print "Sending the following response to the master:\n"
-                print str(response)
-            # get the response's length
-            length = Commands.pad_length(len(response))
-            # send the master the response
-            self.__socket.send(length+response)
+            # send the response
+            self.__send(response)
             # remove the response from the responses' list
             if response in self.__responses:
                 self.__responses.remove(response)
+
+    def __send(self, data):
+        if self.__DEBUG:
+            print "Sending the following data:\n"
+            print str(data)
+        # encrypt the data
+        encrypted = Commands.encrypt(data)
+        # get the data's length
+        length = Commands.pad_length(len(encrypted))
+        # send the data encrypted
+        self.__socket.send(length + encrypted)
 
     def run(self):
         """
@@ -100,6 +107,9 @@ class Peasant(object):
                 else:
                     break
             print "CONNECTED!"
+
+            # send verification
+            self.__send(Commands.hash_func())
 
             # if the connection is still alive
             keep_alive = True

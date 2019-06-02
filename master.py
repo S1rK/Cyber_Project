@@ -1,10 +1,10 @@
 # Tal's Mater Class
-# Version 5 - 14.2.19
+# Version 7 - 1.6.19
 
 from threading import Thread
 from commands import Commands
-from server_v5 import Server
-from gui_v5 import GUI
+from server import Server
+from gui import GUI
 import sys
 
 
@@ -85,14 +85,22 @@ class Master(object):
         if not command:
             print "ERROR: Empty Command."
 
-        # get the params
-        params = [e.get() for l, e in entries]
-        # if debug is on then print them all
-        if self.__DEBUG:
-            print >> sys.__stdout__, "DEBUG: sending to <%s : %s> the command %s with those params: %s" % (address[0], str(address[1]),
-                                                                                        command, params)
         # get the command's number
         command_number = Commands.command_number(command)
+
+        # get the params
+        params = [e.get() for l, e in entries]
+        # add params from Command class
+        params += Commands.add_params(command_number)
+
+        # make sure the params are strings
+        params = [str(param) for param in params]
+
+        # if debug is on then print them all
+        if self.__DEBUG:
+            print >> sys.__stdout__, "DEBUG: sending to <%s : %s> the command %s with those params: %s\n" %\
+                                     (address[0], str(address[1]), command, params)
+
         # combine all the arguments to one message to send to the peasant
         data = command_number + Commands.SEPARATE_CHAR.join(params)
         # send the request throw the server
@@ -114,7 +122,7 @@ class Master(object):
         """
         # if the debug mode is on, print the received data
         if self.__DEBUG:
-            print >> sys.__stdout__, "DEBUG: received form <%s : %s> the following data: %s" % (address[0], address[1], data)
+            print >> sys.__stdout__, "DEBUG: received form <%s : %s> the following data: %s\n" % (address[0], address[1], data)
         # get the response's command
         command = int(data[:Commands.COMMAND_LENGTH])
         # throw away the command number from the response data

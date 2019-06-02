@@ -1,5 +1,5 @@
-# Tal's Mater Class
-# Version 5 - 14.2.19
+# Tal's GUI Class
+# Version 7 - 1.6.19
 
 from commands import Commands
 import Tkinter as Tk
@@ -123,7 +123,7 @@ class GUI(object):
         # add the output highlight-able text
         output = HighlightText(self.__root, state=Tk.DISABLED, font=FONT)
         output.config(state=Tk.DISABLED, font=FONT)
-        output.configure(background='black', foreground='green')
+        output.configure(background='black', foreground='green', width=100)
         output.grid(row=11, column=0, columnspan=2)
         # add the red highlight tag
         output.tag_configure("red", foreground="red")
